@@ -110,10 +110,10 @@ with st.sidebar:
     # ตรวจสอบว่ามีไฟล์อยู่จริงไหม เพื่อป้องกัน Error
     if os.path.exists("logo.png"):
         # use_container_width=True จะทำให้รูปขยายเต็มความกว้าง sidebar สวยงาม
-        st.image("dsd_logo.png", use_container_width=True) 
+        st.image("logo.png", use_container_width=True) 
     else:
         # ถ้าหาไฟล์ไม่เจอ ให้แสดงข้อความเตือนบางๆ
-        st.caption("⚠️ ไม่พบไฟล์ dsd_logo.png")
+        st.caption("⚠️ ไม่พบไฟล์ logo.png")
 
     st.markdown("---") # เส้นคั่นเล็กน้อยเพื่อความสวยงาม
 
