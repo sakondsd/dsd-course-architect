@@ -7,3 +7,4 @@ langchain-huggingface
 faiss-cpu
 pypdf2
 sentence-transformers
+python-docx
