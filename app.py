@@ -1,132 +1,125 @@
 import streamlit as st
 import os
-from src.ui.admin_page import render_admin_page
-from src.ui.user_page import render_user_page
+import time  # ✅ เพิ่มบรรทัดนี้ครับ
+import PyPDF2
+from src.logic.ai_engine import extract_rules_from_pdf_text as extract_rules_from_text
+from src.logic.data_manager import rebuild_knowledge_base
 
-# 1. ตั้งค่าหน้าจอ basic
-st.set_page_config(
-    page_title="DSD Course Architect", 
-    layout="wide",
-    page_icon="https://www.dsd.go.th/img/symbol/logo_dsd.png"
-)
+KB_FOLDER = "knowledge_base"
+ADMIN_PASSWORD = "12345"  # 🔑 รหัสผ่าน
 
-# 2. สร้างโฟลเดอร์เก็บไฟล์ถ้ายังไม่มี
-if not os.path.exists("knowledge_base"):
-    os.makedirs("knowledge_base")
+def render_admin_page():
+    st.header("🛠️ Admin Panel: จัดการกฎระเบียบ")
 
-# ===================================================
-# 🎨 3. DSD THEME (Light Mode: White/Purple/Yellow)
-# ===================================================
-st.markdown("""
-<style>
-    /* Import Font: Prompt */
-    @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
+    # 🔐 เช็ค Password
+    if "admin_logged_in" not in st.session_state:
+        st.session_state.admin_logged_in = False
 
-    /* Global Settings - พื้นหลังขาว ตัวหนังสือเข้ม */
-    html, body, [class*="css"]  {
-        font-family: 'Prompt', sans-serif;
-        color: #333333; /* สีเทาเข้มเกือบดำ */
-        background-color: #FFFFFF; /* สีขาว */
-    }
+    if not st.session_state.admin_logged_in:
+        st.info("🔒 หน้านี้จำกัดสิทธิ์เฉพาะผู้ดูแลระบบ")
+        password_input = st.text_input("กรุณาใส่รหัสผ่าน:", type="password")
+        if st.button("เข้าสู่ระบบ"):
+            if password_input == ADMIN_PASSWORD:
+                st.session_state.admin_logged_in = True
+                st.success("เข้าสู่ระบบสำเร็จ!")
+                st.rerun()
+            else:
+                st.error("❌ รหัสผ่านไม่ถูกต้อง")
+        return 
 
-    /* Headers - สีม่วงกรมฯ */
-    h1, h2, h3, h4 {
-        color: #5A2D81 !important; /* DSD Purple */
-        font-weight: 600 !important;
-    }
+    # ปุ่ม Logout
+    if st.button("ออกจากระบบ (Logout)", type="secondary"):
+        st.session_state.admin_logged_in = False
+        st.rerun()
     
-    /* Sidebar - สีพื้นหลังเทาอมม่วงอ่อนๆ */
-    section[data-testid="stSidebar"] {
-        background-color: #F9F7FC;
-        border-right: 1px solid #E5D9F2;
-    }
-    
-    /* Buttons (Primary) - ไล่สีม่วง */
-    .stButton>button[kind="primary"] {
-        background: linear-gradient(135deg, #5A2D81 0%, #7B4397 100%);
-        color: white;
-        border: none;
-        border-radius: 8px;
-        font-weight: 500;
-    }
-    /* Buttons (Secondary) - ขอบม่วง พื้นขาว */
-    .stButton>button[kind="secondary"] {
-        color: #5A2D81;
-        border: 1px solid #5A2D81;
-        background-color: white;
-        border-radius: 8px;
-    }
+    st.divider()
 
-    /* Input Fields - ขอบเรียบ พื้นขาว */
-    .stTextInput input, .stTextArea textarea {
-        background-color: #FFFFFF;
-        border: 1px solid #D0D0D0;
-        border-radius: 8px;
-        color: #333333;
-    }
-    .stTextInput input:focus, .stTextArea textarea:focus {
-        border-color: #5A2D81;
-        box-shadow: 0 0 0 1px #5A2D81;
-    }
+    # =========================================
+    # ส่วนที่ 1: จัดการไฟล์ในระบบ (File Management)
+    # =========================================
+    st.subheader("1. 📂 จัดการไฟล์กฎระเบียบ")
     
-    /* Accent Highlights (เช่น เส้นคั่น, info box) - ใช้สีเหลือง/ทอง DSD */
-    hr {
-        border-color: #F2A900; /* DSD Yellow/Gold */
-        opacity: 0.3;
-    }
-    .stAlert[data-baseweb="notification"] {
-        border-left-color: #F2A900 !important;
-    }
-    
-    /* Custom Header Bar (แถบสีม่วงคาดบน) */
-    .dsd-header-bar {
-        background: linear-gradient(90deg, #5A2D81 0%, #7B4397 100%);
-        height: 4px;
-        width: 100%;
-        margin-bottom: 20px;
-        border-radius: 2px;
-    }
-    
-    /* Result Card (การ์ดแสดงผลลัพธ์) */
-    .result-card {
-        background-color: #FDFDFD;
-        border: 1px solid #EEEEEE;
-        border-top: 4px solid #F2A900; /* หัวสีเหลือง */
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
+    # อ่านไฟล์ทั้งหมดในโฟลเดอร์
+    if not os.path.exists(KB_FOLDER): os.makedirs(KB_FOLDER)
+    files = [f for f in os.listdir(KB_FOLDER) if f.endswith(".txt")]
 
-</style>
-""", unsafe_allow_html=True)
-
-# ===================================================
-# 4. Application Logic
-# ===================================================
-
-# Sidebar เมนู
-with st.sidebar:
-    # ✅ 1. ใส่โค้ดแสดงโลโก้ตรงนี้ (บรรทัดบนสุดของ sidebar)
-    # ตรวจสอบว่ามีไฟล์อยู่จริงไหม เพื่อป้องกัน Error
-    if os.path.exists("logo.png"):
-        # use_container_width=True จะทำให้รูปขยายเต็มความกว้าง sidebar สวยงาม
-        st.image("logo.png", use_container_width=True) 
+    if not files:
+        st.warning("ไม่มีไฟล์กฎระเบียบในระบบ")
     else:
-        # ถ้าหาไฟล์ไม่เจอ ให้แสดงข้อความเตือนบางๆ
-        st.caption("⚠️ ไม่พบไฟล์ logo.png")
+        st.write(f"มีไฟล์ทั้งหมด {len(files)} ไฟล์:")
+        for f in files:
+            col1, col2 = st.columns([0.8, 0.2])
+            with col1:
+                st.text(f"📄 {f}")
+            with col2:
+                # ปุ่มลบไฟล์
+                if st.button("🗑️ ลบ", key=f"del_{f}"):
+                    try:
+                        os.remove(os.path.join(KB_FOLDER, f))
+                        st.toast(f"ลบไฟล์ {f} เรียบร้อย!", icon="✅")
+                        time.sleep(1) # รอ 1 วินาทีให้แจ้งเตือนขึ้นก่อนรีเฟรช
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"ลบไม่สำเร็จ: {e}")
 
-    st.markdown("---") # เส้นคั่นเล็กน้อยเพื่อความสวยงาม
-
-    # (โค้ดเดิมของคุณต่อจากนี้)
-    st.title("🏗️ DSD Architect")
-    st.caption("ระบบออกแบบหลักสูตรพัฒนาฝีมือแรงงาน")
     st.markdown("---")
-    page = st.radio("เมนูหลัก", ["ออกแบบหลักสูตร (User)", "จัดการระบบ (Admin)"])
 
-# Router เลือกหน้าจอ
-if page == "ออกแบบหลักสูตร (User)":
-    # เพิ่มแถบสีด้านบนในหน้า User
-    st.markdown('<div class="dsd-header-bar"></div>', unsafe_allow_html=True)
-    render_user_page()
-else:
-    render_admin_page()
+    # =========================================
+    # ส่วนที่ 2: อัปเดตสมอง AI
+    # =========================================
+    st.subheader("2. 🧠 อัปเดตสมอง AI")
+    st.caption("⚠️ เมื่อมีการ ลบ หรือ เพิ่ม ไฟล์เสร็จแล้ว ต้องกดปุ่มนี้เสมอ")
+    
+    if st.button("🔄 Re-index Knowledge Base (Sync)", type="primary"):
+        with st.spinner("กำลังอ่านไฟล์ทั้งหมดและสร้างสมองใหม่..."):
+            msg = rebuild_knowledge_base()
+            st.success(msg)
+
+    st.markdown("---")
+
+    # =========================================
+    # ส่วนที่ 3: AI Rule Extractor (เพิ่มกฎใหม่)
+    # =========================================
+    st.subheader("3. ✨ เพิ่มกฎใหม่ (AI Extractor)")
+    st.info("อัปโหลดไฟล์ PDF/TXT เพื่อให้ AI แกะเป็นกฎ แล้วบันทึกลงระบบ")
+    
+    uploaded_file = st.file_uploader("เลือกไฟล์ต้นฉบับ", type=["pdf", "txt"], key="rule_extractor")
+    
+    if uploaded_file:
+        if uploaded_file.size == 0:
+            st.error("⚠️ ไฟล์ว่างเปล่า")
+        else:
+            file_type = uploaded_file.name.split('.')[-1].lower()
+            if st.button(f"แปลงไฟล์ {file_type.upper()} เป็นกฎ"):
+                with st.spinner("AI กำลังทำงาน..."):
+                    raw_text = ""
+                    try:
+                        if file_type == 'pdf':
+                            reader = PyPDF2.PdfReader(uploaded_file)
+                            raw_text = "".join([p.extract_text() for p in reader.pages])
+                        elif file_type == 'txt':
+                            bytes_data = uploaded_file.getvalue()
+                            try: raw_text = bytes_data.decode("utf-8")
+                            except: raw_text = bytes_data.decode("cp874")
+                        
+                        if raw_text:
+                            rules = extract_rules_from_text(raw_text)
+                            st.session_state["draft_rules"] = rules
+                            st.session_state["draft_filename"] = f"กฎ_{uploaded_file.name}"
+                            st.success("✅ แกะกฎสำเร็จ!")
+                    except Exception as e:
+                        st.error(f"Error: {e}")
+
+    # ส่วนบันทึก (เหมือนเดิม)
+    if "draft_rules" in st.session_state:
+        st.markdown("#### 📝 ตรวจสอบและบันทึก")
+        edited_rules = st.text_area("เนื้อหากฎ:", st.session_state["draft_rules"], height=300)
+        save_name = st.text_input("ตั้งชื่อไฟล์:", value=st.session_state.get("draft_filename", "rules.txt"))
+
+        if st.button("💾 บันทึกลงระบบ"):
+            if not save_name.endswith('.txt'): save_name += ".txt"
+            with open(os.path.join(KB_FOLDER, save_name), "w", encoding="utf-8") as f:
+                f.write(edited_rules)
+            st.success("บันทึกเรียบร้อย! (อย่าลืมกด Re-index ด้านบน)")
+            del st.session_state["draft_rules"]
+            st.rerun()
