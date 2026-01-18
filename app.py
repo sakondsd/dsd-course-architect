@@ -58,6 +58,9 @@ st.markdown("""
         transition: all 0.3s ease;
     }
     .stButton > button[kind="primary"]:hover {
+        background: linear-gradient(135deg, #5A2D81 0%, #7B4397 100%) !important;
+        border: none !important;
+        color: #FFFFFF !important; /* ✅ บังคับตัวหนังสือสีขาว */       
         transform: translateY(-2px);
         box-shadow: 0 6px 12px rgba(0,0,0,0.2);
     }
