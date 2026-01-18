@@ -1,0 +1,15 @@
+name: Keep App Alive
+
+on:
+  schedule:
+    # ตั้งเวลาให้ทำงานทุกๆ 30 นาที (หรือเปลี่ยนเลขตามต้องการ)
+    - cron: "*/30 * * * *"
+  workflow_dispatch: # เพื่อให้เรากดรันมือเองได้ด้วย
+
+jobs:
+  ping_app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit App
+        # ⚠️ แก้ตรงนี้: เปลี่ยนลิงก์เป็น URL แอปของคุณ
+        run: curl -I https://https://dsd-course-designer.streamlit.app/
