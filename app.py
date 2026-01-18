@@ -29,7 +29,7 @@ def get_image_base64(image_path):
         return "https://www.dsd.go.th/img/symbol/logo_dsd.png"
 
 # ===================================================
-# 2. PROFESSIONAL CSS (Typo & Layout Fixed)
+# 2. PROFESSIONAL CSS (Updated Fixes ✅)
 # ===================================================
 st.markdown("""
 <style>
@@ -42,59 +42,49 @@ st.markdown("""
 
     header {visibility: hidden;}
     
-    /* --- 🔠 ปรับขนาดตัวอักษรให้สมดุล (Typography Fix) --- */
-    
-    /* หัวข้อใหญ่สุด (ชื่อหลักสูตร) */
-    h1 {
-        font-size: 26px !important;
-        font-weight: 700 !important;
-        color: #5A2D81 !important;
-        margin-bottom: 20px !important;
-        line-height: 1.4 !important;
+    /* --- 🔠 ปรับขนาดตัวอักษร (Typography) --- */
+    h1 { font-size: 26px !important; font-weight: 700 !important; color: #5A2D81 !important; margin-bottom: 20px !important; line-height: 1.4 !important; }
+    h2 { font-size: 22px !important; font-weight: 600 !important; color: #444 !important; margin-top: 30px !important; margin-bottom: 15px !important; border-left: 5px solid #5A2D81; padding-left: 10px; }
+    h3 { font-size: 18px !important; font-weight: 600 !important; color: #555 !important; margin-top: 15px !important; }
+    p, li, div { font-size: 16px !important; line-height: 1.7 !important; color: #333 !important; font-weight: 300 !important; }
+
+    /* --- 🟣 1. แก้ไขปุ่มกด (Button Fix) --- */
+    /* บังคับให้ปุ่ม Primary เป็นสีม่วง และตัวหนังสือสีขาวเสมอ */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #5A2D81 0%, #7B4397 100%) !important;
+        border: none !important;
+        color: #FFFFFF !important; /* ✅ บังคับตัวหนังสือสีขาว */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
     }
-    
-    /* หัวข้อรอง (1. หลักการและเหตุผล...) */
-    h2 {
-        font-size: 22px !important;
-        font-weight: 600 !important;
-        color: #444 !important;
-        margin-top: 30px !important;
-        margin-bottom: 15px !important;
-        border-left: 5px solid #5A2D81; /* เพิ่มลูกเล่นขีดข้างหน้า */
-        padding-left: 10px;
+    .stButton > button[kind="primary"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
     }
-    
-    /* หัวข้อย่อย */
-    h3 {
-        font-size: 18px !important;
-        font-weight: 600 !important;
-        color: #555 !important;
-        margin-top: 15px !important;
+    /* แก้ไขกรณี Streamlit ซ้อน Element ภายในปุ่ม */
+    .stButton > button[kind="primary"] p {
+        color: #FFFFFF !important; /* ✅ บังคับสีขาวในระดับ p tag */
     }
-    
-    /* เนื้อหาปกติ */
-    p, li, div {
-        font-size: 16px !important;
-        line-height: 1.7 !important; /* เพิ่มช่องไฟบรรทัดให้อ่านง่าย */
-        color: #333 !important;
-        font-weight: 300 !important;
-    }
-    
-    /* ตาราง */
+
+    /* --- 📊 2. แก้ไขตาราง (Table Fix) --- */
     th {
         background-color: #f0f2f6;
         color: #5A2D81 !important;
         font-weight: 600 !important;
-        font-size: 15px !important;
+        font-size: 16px !important;
+        text-align: left !important;
     }
-    td {
-        font-size: 14px !important;
+    
+    /* ✅ จัดการช่องแรก (เวลา) ให้กว้างและไม่ตัดคำ */
+    th:first-child, td:first-child {
+        min-width: 130px !important;   /* กำหนดความกว้างขั้นต่ำ */
+        white-space: nowrap !important; /* ห้ามตัดบรรทัด (เช่น 09:00 - 10:30 จะอยู่บรรทัดเดียว) */
+        font-weight: 600 !important;
+        color: #5A2D81 !important;     /* ให้เวลาเป็นสีม่วงสวยๆ */
+        vertical-align: top !important; /* ให้ตัวหนังสือชิดบนเสมอ */
     }
 
-    /* --- (ส่วน Header & Footer เดิม คงไว้ได้เลย) --- */
-    /* ... (Copy CSS ส่วน Header/Footer เดิมมาใส่ต่อท้ายตรงนี้) ... */
-    
-    /* Tabs styling */
+    /* --- (ส่วน Header & Footer เดิม) --- */
     .stTabs [data-baseweb="tab-list"] {
         gap: 20px; background-color: transparent;
         padding-bottom: 10px; border-bottom: 1px solid #ddd; margin-top: 20px;
@@ -108,7 +98,6 @@ st.markdown("""
         border-bottom: 3px solid #5A2D81; font-weight: 700;
     }
 
-    /* Dark Header */
     .top-nav-container {
         display: flex; justify-content: flex-start; align-items: center;
         padding: 20px 30px; margin-bottom: 10px;
@@ -122,15 +111,9 @@ st.markdown("""
         background-color: white; padding: 5px; border-radius: 50%;
         margin-right: 20px;
     }
-    .app-title {
-        font-size: 28px; font-weight: 700; color: white !important;
-        margin: 0; line-height: 1.2;
-    }
-    .app-subtitle {
-        font-size: 16px; color: #e0e0e0 !important; font-weight: 300; margin: 0; opacity: 0.9;
-    }
+    .app-title { font-size: 28px; font-weight: 700; color: white !important; margin: 0; line-height: 1.2; }
+    .app-subtitle { font-size: 16px; color: #e0e0e0 !important; font-weight: 300; margin: 0; opacity: 0.9; }
     
-    /* Footer */
     .footer {
         position: fixed; left: 0; bottom: 0; width: 100%;
         background-color: #333; color: #ccc;
@@ -141,12 +124,11 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ===================================================
-# 3. HEADER SECTION (Clean Version)
+# 3. HEADER SECTION
 # ===================================================
 
 logo_src = get_image_base64("logo_dsd.png")
 
-# ไม่แบ่งคอลัมน์แล้ว ใช้พื้นที่เต็มเลยให้ดูสง่า
 st.markdown(f"""
 <div class="top-nav-container">
     <img src="{logo_src}" class="logo-img">
