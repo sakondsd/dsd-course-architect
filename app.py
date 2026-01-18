@@ -29,14 +29,70 @@ def get_image_base64(image_path):
         return "https://www.dsd.go.th/img/symbol/logo_dsd.png"
 
 # ===================================================
-# 2. PROFESSIONAL CSS
+# 2. PROFESSIONAL CSS (Typo & Layout Fixed)
 # ===================================================
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
     
-    html, body, [class*="css"]  { font-family: 'Prompt', sans-serif; }
+    html, body, [class*="css"], .stMarkdown { 
+        font-family: 'Prompt', sans-serif; 
+        color: #333;
+    }
+
     header {visibility: hidden;}
+    
+    /* --- 🔠 ปรับขนาดตัวอักษรให้สมดุล (Typography Fix) --- */
+    
+    /* หัวข้อใหญ่สุด (ชื่อหลักสูตร) */
+    h1 {
+        font-size: 26px !important;
+        font-weight: 700 !important;
+        color: #5A2D81 !important;
+        margin-bottom: 20px !important;
+        line-height: 1.4 !important;
+    }
+    
+    /* หัวข้อรอง (1. หลักการและเหตุผล...) */
+    h2 {
+        font-size: 22px !important;
+        font-weight: 600 !important;
+        color: #444 !important;
+        margin-top: 30px !important;
+        margin-bottom: 15px !important;
+        border-left: 5px solid #5A2D81; /* เพิ่มลูกเล่นขีดข้างหน้า */
+        padding-left: 10px;
+    }
+    
+    /* หัวข้อย่อย */
+    h3 {
+        font-size: 18px !important;
+        font-weight: 600 !important;
+        color: #555 !important;
+        margin-top: 15px !important;
+    }
+    
+    /* เนื้อหาปกติ */
+    p, li, div {
+        font-size: 16px !important;
+        line-height: 1.7 !important; /* เพิ่มช่องไฟบรรทัดให้อ่านง่าย */
+        color: #333 !important;
+        font-weight: 300 !important;
+    }
+    
+    /* ตาราง */
+    th {
+        background-color: #f0f2f6;
+        color: #5A2D81 !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
+    }
+    td {
+        font-size: 14px !important;
+    }
+
+    /* --- (ส่วน Header & Footer เดิม คงไว้ได้เลย) --- */
+    /* ... (Copy CSS ส่วน Header/Footer เดิมมาใส่ต่อท้ายตรงนี้) ... */
     
     /* Tabs styling */
     .stTabs [data-baseweb="tab-list"] {
@@ -60,14 +116,12 @@ st.markdown("""
         border-radius: 12px; box-shadow: 0 4px 15px rgba(90, 45, 129, 0.2);
         color: white;
     }
-    
     .logo-img {
         height: 65px; width: auto;
         filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); 
         background-color: white; padding: 5px; border-radius: 50%;
         margin-right: 20px;
     }
-
     .app-title {
         font-size: 28px; font-weight: 700; color: white !important;
         margin: 0; line-height: 1.2;
@@ -82,7 +136,6 @@ st.markdown("""
         background-color: #333; color: #ccc;
         text-align: center; padding: 10px; font-size: 12px; z-index: 100;
     }
-    
     .block-container { padding-top: 1rem; padding-bottom: 5rem; }
 </style>
 """, unsafe_allow_html=True)
