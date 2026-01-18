@@ -48,7 +48,25 @@ st.markdown("""
     h3 { font-size: 18px !important; font-weight: 600 !important; color: #555 !important; margin-top: 15px !important; }
     p, li, div { font-size: 16px !important; line-height: 1.7 !important; color: #333 !important; font-weight: 300 !important; }
 
- /* --- 🟣 แก้ไขปุ่มดาวน์โหลด (Download Button Fix) --- */
+    /* --- 🟣 1. แก้ไขปุ่มกด (Button Fix) --- */
+    /* บังคับให้ปุ่ม Primary เป็นสีม่วง และตัวหนังสือสีขาวเสมอ */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(135deg, #5A2D81 0%, #7B4397 100%) !important;
+        border: none !important;
+        color: #FFFFFF !important; /* ✅ บังคับตัวหนังสือสีขาว */
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+    }
+    .stButton > button[kind="primary"]:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+    /* แก้ไขกรณี Streamlit ซ้อน Element ภายในปุ่ม */
+    .stButton > button[kind="primary"] p {
+        color: #FFFFFF !important; /* ✅ บังคับสีขาวในระดับ p tag */
+    }           
+
+    /* --- 🟣 แก้ไขปุ่มดาวน์โหลด (Download Button Fix) --- */
     /* เจาะจงไปที่ปุ่ม Download โดยเฉพาะ */
     [data-testid="stDownloadButton"] button {
         background: linear-gradient(135deg, #5A2D81 0%, #7B4397 100%) !important;
