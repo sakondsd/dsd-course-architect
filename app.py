@@ -35,9 +35,11 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
     
-    html, body, [class*="css"], .stMarkdown { 
-        font-family: 'Prompt', sans-serif; 
-        color: #333;
+/* ✅ ปรับ Global Font ให้หนาขึ้นและสีดำเข้ม */
+    html, body, [class*="css"], .stMarkdown, div, p, li, span { 
+        font-family: 'Prompt', sans-serif !important; 
+        color: #000000 !important;  /* เปลี่ยนจาก #333 เป็นดำสนิท */
+        font-weight: 400 !important; /* เพิ่มความหนาจาก 300 เป็น 400 (Regular) */
     }
 
     header {visibility: hidden;}
