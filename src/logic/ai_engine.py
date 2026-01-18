@@ -18,7 +18,7 @@ def get_llm():
         raise ValueError("❌ ไม่พบ Google API Key! กรุณาตั้งค่าใน .env หรือ Secrets")
     
     return ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash", 
+        model="gemini-2.5-flash", 
         google_api_key=api_key,
         temperature=0.3
     )
