@@ -35,61 +35,40 @@ st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
     
-/* ✅ ปรับ Global Font ให้หนาขึ้นและสีดำเข้ม */
-    html, body, [class*="css"], .stMarkdown, div, p, li, span { 
+    /* ✅ แก้ไข 1: เจาะจง Element แทนการเหมาเข่ง (เอา div, span ออก) เพื่อไม่ให้ Icon พัง */
+    /* นี่คือจุดที่ต่างจากโค้ดเดิมครับ เราจะไม่ใช้ [class*="css"] แล้ว */
+    html, body, .stMarkdown, p, h1, h2, h3, h4, h5, h6, li, a, button, input, label, textarea { 
         font-family: 'Prompt', sans-serif !important; 
-        color: #000000 !important;  /* เปลี่ยนจาก #333 เป็นดำสนิท */
-        font-weight: 400 !important; /* เพิ่มความหนาจาก 300 เป็น 400 (Regular) */
+        color: #000000 !important;  /* ดำสนิท */
+        font-weight: 400 !important; /* หนาขึ้น */
     }
 
+    /* ซ่อน Decoration Bar ด้านบน */
     header {visibility: hidden;}
     
-    /* --- 🔠 ปรับขนาดตัวอักษร (Typography) --- */
+    /* --- 🔠 Typography --- */
     h1 { font-size: 26px !important; font-weight: 700 !important; color: #5A2D81 !important; margin-bottom: 20px !important; line-height: 1.4 !important; }
-    h2 { font-size: 22px !important; font-weight: 600 !important; color: #444 !important; margin-top: 30px !important; margin-bottom: 15px !important; border-left: 5px solid #5A2D81; padding-left: 10px; }
-    h3 { font-size: 18px !important; font-weight: 600 !important; color: #555 !important; margin-top: 15px !important; }
-    p, li, div { font-size: 16px !important; line-height: 1.7 !important; color: #333 !important; font-weight: 300 !important; }
+    h2 { font-size: 22px !important; font-weight: 600 !important; color: #333333 !important; margin-top: 30px !important; margin-bottom: 15px !important; border-left: 5px solid #5A2D81; padding-left: 10px; }
+    h3 { font-size: 18px !important; font-weight: 600 !important; color: #444444 !important; margin-top: 15px !important; }
 
-    /* --- 🟣 1. แก้ไขปุ่มกด (Button Fix) --- */
-    /* บังคับให้ปุ่ม Primary เป็นสีม่วง และตัวหนังสือสีขาวเสมอ */
+    /* --- 🟣 Button Fix (ปุ่มปกติ) --- */
     .stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #5A2D81 0%, #7B4397 100%) !important;
         border: none !important;
-        color: #FFFFFF !important; /* ✅ บังคับตัวหนังสือสีขาว */
+        color: #FFFFFF !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        transition: all 0.3s ease;
     }
-    .stButton > button[kind="primary"]:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 12px rgba(0,0,0,0.2);
-    }
-    /* แก้ไขกรณี Streamlit ซ้อน Element ภายในปุ่ม */
-    .stButton > button[kind="primary"] p {
-        color: #FFFFFF !important; /* ✅ บังคับสีขาวในระดับ p tag */
-    }           
+    .stButton > button[kind="primary"] * { color: #FFFFFF !important; font-weight: 500 !important; }
 
-    /* --- 🟣 แก้ไขปุ่มดาวน์โหลด (Download Button Fix) --- */
-    /* เจาะจงไปที่ปุ่ม Download โดยเฉพาะ */
+    /* --- 🟣 Download Button Fix (ปุ่มดาวน์โหลด) --- */
     [data-testid="stDownloadButton"] button {
         background: linear-gradient(135deg, #5A2D81 0%, #7B4397 100%) !important;
-        color: #FFFFFF !important; /* ✅ บังคับตัวหนังสือสีขาว */
+        color: #FFFFFF !important;
         border: none !important;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    
-    /* บังคับทุกข้อความในปุ่มให้เป็นสีขาว */
-    [data-testid="stDownloadButton"] button * {
-        color: #FFFFFF !important;
-    }
+    [data-testid="stDownloadButton"] button * { color: #FFFFFF !important; font-weight: 500 !important; }
 
-    /* ตอนเอาเมาส์ชี้ (Hover) */
-    [data-testid="stDownloadButton"] button:hover {
-        background: linear-gradient(135deg, #7B4397 0%, #5A2D81 100%) !important;
-        color: #FFFFFF !important;
-        transform: translateY(-2px);
-    }
-
-    /* --- 📊 2. แก้ไขตาราง (Table Fix) --- */
+    /* --- 📊 Table Fix (ตาราง) --- */
     th {
         background-color: #f0f2f6;
         color: #5A2D81 !important;
@@ -97,52 +76,38 @@ st.markdown("""
         font-size: 16px !important;
         text-align: left !important;
     }
-    
-    /* ✅ จัดการช่องแรก (เวลา) ให้กว้างและไม่ตัดคำ */
+    td {
+        font-size: 15px !important;
+        color: #000000 !important;
+        font-weight: 400 !important;
+        vertical-align: top !important;
+    }
+    /* ช่องเวลา */
     th:first-child, td:first-child {
-        min-width: 130px !important;   /* กำหนดความกว้างขั้นต่ำ */
-        white-space: nowrap !important; /* ห้ามตัดบรรทัด (เช่น 09:00 - 10:30 จะอยู่บรรทัดเดียว) */
+        min-width: 130px !important;
+        white-space: nowrap !important;
         font-weight: 600 !important;
-        color: #5A2D81 !important;     /* ให้เวลาเป็นสีม่วงสวยๆ */
-        vertical-align: top !important; /* ให้ตัวหนังสือชิดบนเสมอ */
+        color: #5A2D81 !important;
     }
 
-    /* --- (ส่วน Header & Footer เดิม) --- */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 20px; background-color: transparent;
-        padding-bottom: 10px; border-bottom: 1px solid #ddd; margin-top: 20px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px; white-space: pre-wrap; background-color: transparent;
-        border-radius: 4px; color: #666; font-size: 16px; font-weight: 500;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #f0f2f6; color: #5A2D81;
-        border-bottom: 3px solid #5A2D81; font-weight: 700;
-    }
+    /* --- Header/Footer/Tabs --- */
+    .stTabs [data-baseweb="tab-list"] { gap: 20px; background-color: transparent; padding-bottom: 10px; border-bottom: 1px solid #ddd; margin-top: 20px; }
+    .stTabs [data-baseweb="tab"] { height: 50px; white-space: pre-wrap; background-color: transparent; border-radius: 4px; color: #666; font-size: 16px; font-weight: 500; }
+    .stTabs [aria-selected="true"] { background-color: #f0f2f6; color: #5A2D81; border-bottom: 3px solid #5A2D81; font-weight: 700; }
 
-    .top-nav-container {
-        display: flex; justify-content: flex-start; align-items: center;
-        padding: 20px 30px; margin-bottom: 10px;
-        background: linear-gradient(135deg, #5A2D81 0%, #4a236e 100%);
-        border-radius: 12px; box-shadow: 0 4px 15px rgba(90, 45, 129, 0.2);
-        color: white;
-    }
-    .logo-img {
-        height: 65px; width: auto;
-        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); 
-        background-color: white; padding: 5px; border-radius: 50%;
-        margin-right: 20px;
-    }
+    .top-nav-container { display: flex; justify-content: flex-start; align-items: center; padding: 20px 30px; margin-bottom: 10px; background: linear-gradient(135deg, #5A2D81 0%, #4a236e 100%); border-radius: 12px; box-shadow: 0 4px 15px rgba(90, 45, 129, 0.2); color: white; }
+    .logo-img { height: 65px; width: auto; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); background-color: white; padding: 5px; border-radius: 50%; margin-right: 20px; }
     .app-title { font-size: 28px; font-weight: 700; color: white !important; margin: 0; line-height: 1.2; }
     .app-subtitle { font-size: 16px; color: #e0e0e0 !important; font-weight: 300; margin: 0; opacity: 0.9; }
     
-    .footer {
-        position: fixed; left: 0; bottom: 0; width: 100%;
-        background-color: #333; color: #ccc;
-        text-align: center; padding: 10px; font-size: 12px; z-index: 100;
-    }
+    .footer { position: fixed; left: 0; bottom: 0; width: 100%; background-color: #333; color: #ccc; text-align: center; padding: 10px; font-size: 12px; z-index: 100; }
     .block-container { padding-top: 1rem; padding-bottom: 5rem; }
+    
+    /* ✅ แก้ไข 2: เพิ่มการรองรับ Expander ให้แสดงผลถูกต้อง */
+    [data-testid="stExpander"] details summary p {
+        font-weight: 600 !important;
+        color: #5A2D81 !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
