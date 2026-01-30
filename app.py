@@ -92,53 +92,34 @@ st.markdown("""
     .custom-footer {
         background: linear-gradient(to right, #2c1342, #1E2A45, #2c1342); 
         color: #ffffff;
-        
-        /* ✅ ปรับลด Padding ลงอีกให้แถบเตี้ยลง */
         padding: 15px 30px; 
-        
-        border-top: 3px solid #FFD700; /* เส้นทองเล็กลงนิดนึง */
+        border-top: 3px solid #FFD700; 
         margin-top: 40px;
         box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
-        
-        /* ✅ Flexbox: ชิดซ้าย */
         display: flex;
         align-items: center; 
-        justify-content: flex-start; /* ✅ เปลี่ยนจาก center เป็น flex-start */
+        justify-content: flex-start; 
         text-align: left;
     }
     
-    /* ✅ ลดขนาดรูปให้มินิมอล */
     .profile-img {
-        width: 65px !important;  /* ✅ เล็กลงเหลือ 65px */
+        width: 65px !important;
         height: 65px !important; 
         object-fit: cover !important;
         border-radius: 50% !important;
-        border: 2px solid #FFD700 !important; /* ขอบบางลง */
+        border: 2px solid #FFD700 !important;
         margin-bottom: 0 !important;
-        margin-right: 20px !important; /* เว้นระยะห่างพอดีๆ */
+        margin-right: 20px !important;
         box-shadow: 0 0 8px rgba(255, 215, 0, 0.4);
         background-color: white;
         display: inline-block !important;
     }
     
-    .footer-text-group {
-        display: flex;
-        flex-direction: column;
-    }
-
-    /* ปรับขนาดตัวหนังสือให้เล็กลงสมส่วน */
-    .footer-header { 
-        color: #FFD700; font-size: 14px !important; font-weight: 700 !important; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; 
-        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
-    }
+    .footer-text-group { display: flex; flex-direction: column; }
+    .footer-header { color: #FFD700; font-size: 14px !important; font-weight: 700 !important; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.3); }
     .footer-text { color: #E0E0E0 !important; font-size: 12px !important; margin-bottom: 2px; font-weight: 300 !important; }
-    
-    .footer-link { 
-        color: #FFD700 !important; text-decoration: none; font-weight: 600 !important; 
-        transition: all 0.3s ease;
-    }
+    .footer-link { color: #FFD700 !important; text-decoration: none; font-weight: 600 !important; transition: all 0.3s ease; }
     .footer-link:hover { text-decoration: underline; color: #ffffff !important; text-shadow: 0 0 5px #FFD700; }
-    
     .copyright { margin-top: 5px; font-size: 10px !important; color: #aaaac0 !important; }
 
     /* Expander Fix */
@@ -168,7 +149,39 @@ st.markdown(f"""
 tab1, tab2 = st.tabs(["🎓 ออกแบบหลักสูตร (User)", "🛠️ จัดการระบบ (Admin)"])
 
 with tab1:
-    st.markdown("###")
+    # --- ✨ ส่วนปุ่มตัวอย่าง (Quick Start) ✨ ---
+    st.markdown("### 💡 เลือกตัวอย่างหลักสูตร (คลิกเพื่อเติมข้อมูลอัตโนมัติ)")
+    
+    # แบ่งเป็น 3 คอลัมน์
+    col_ex1, col_ex2, col_ex3 = st.columns(3)
+
+    # 1. ปุ่มช่างไฟฟ้า
+    with col_ex1:
+        if st.button("⚡ ช่างไฟฟ้าภายในอาคาร", use_container_width=True):
+            st.session_state["job_title"] = "ช่างไฟฟ้าภายในอาคาร ระดับ 1"
+            st.session_state["duration"] = "30 ชั่วโมง (5 วัน)"
+            st.session_state["objectives"] = "1. เดินสายไฟไม่สวยงามและไม่ปลอดภัย\n2. ต่อวงจรไฟฟ้าพื้นฐานผิดพลาดบ่อย\n3. ขาดความรู้เรื่องมาตรฐานความปลอดภัย"
+            st.session_state["context"] = "ต้องการติวเข้มเพื่อเตรียมทดสอบมาตรฐานฝีมือแรงงานแห่งชาติ เน้นปฏิบัติ 80%"
+
+    # 2. ปุ่มพยาบาล/ดูแลผู้สูงอายุ (ตามคำขอ)
+    with col_ex2:
+        if st.button("🏥 ผู้ดูแลผู้สูงอายุ/พยาบาล", use_container_width=True):
+            st.session_state["job_title"] = "พนักงานดูแลผู้สูงอายุ (Caregiver)"
+            st.session_state["duration"] = "18 ชั่วโมง (3 วัน)"
+            st.session_state["objectives"] = "1. ขาดทักษะการปฐมพยาบาลเบื้องต้น (CPR)\n2. เคลื่อนย้ายผู้ป่วยติดเตียงผิดวิธี\n3. การวัดสัญญาณชีพและการดูแลสุขอนามัยยังไม่ถูกต้อง"
+            st.session_state["context"] = "ผู้เข้าอบรมเป็นประชาชนทั่วไป เน้นฝึกปฏิบัติกับหุ่นจำลอง และการใช้เครื่องมือแพทย์เบื้องต้น"
+
+    # 3. ปุ่มนักการตลาดออนไลน์
+    with col_ex3:
+        if st.button("📱 นักการตลาดออนไลน์", use_container_width=True):
+            st.session_state["job_title"] = "นักการตลาดออนไลน์ (Digital Marketing)"
+            st.session_state["duration"] = "12 ชั่วโมง (2 วัน)"
+            st.session_state["objectives"] = "1. ถ่ายรูปสินค้าไม่สวย\n2. เขียนแคปชั่นขายของไม่ดึงดูด\n3. ยิงโฆษณาไม่ตรงกลุ่มเป้าหมาย"
+            st.session_state["context"] = "เน้นการใช้ Smartphone เครื่องเดียวในการทำงาน และใช้ AI ช่วยเขียนคอนเทนต์"
+
+    st.markdown("---") # เส้นคั่นสวยๆ
+    
+    # เรียกหน้า User Page ปกติ (ซึ่งจะดึงค่าจาก session_state ไปแสดง)
     render_user_page()
 
 with tab2:
@@ -176,7 +189,7 @@ with tab2:
     render_admin_page()
 
 # ===================================================
-# 5. FOOTER (ชิดซ้าย + ขนาดเล็ก)
+# 5. FOOTER
 # ===================================================
 
 # หารูปโปรไฟล์
