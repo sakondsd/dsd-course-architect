@@ -19,7 +19,6 @@ if not os.path.exists("knowledge_base"):
     os.makedirs("knowledge_base")
 
 def get_image_base64(image_path):
-    """แปลงไฟล์รูปภาพเป็น Base64 สำหรับแสดงผลใน HTML"""
     if os.path.exists(image_path):
         with open(image_path, "rb") as img_file:
             encoded = base64.b64encode(img_file.read()).decode()
@@ -27,7 +26,6 @@ def get_image_base64(image_path):
         mime_type = "jpeg" if ext in ['jpg', 'jpeg'] else "png"
         return f"data:image/{mime_type};base64,{encoded}"
     else:
-        # รูปสำรองถ้าหาไฟล์ไม่เจอ
         return "https://www.dsd.go.th/img/symbol/logo_dsd.png"
 
 # ===================================================
@@ -35,17 +33,14 @@ def get_image_base64(image_path):
 # ===================================================
 st.markdown("""
 <style>
-    /* นำเข้าฟอนต์ Prompt */
     @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap');
     
-    /* บังคับใช้ฟอนต์ Prompt ทั้งหมด */
     html, body, .stMarkdown, p, h1, h2, h3, h4, h5, h6, li, a, button, input, label, textarea { 
         font-family: 'Prompt', sans-serif !important; 
-        color: #000000 !important;
+        color: #333333 !important; /* ปรับสีตัวอักษรหลักเป็นเทาเข้ม */
         font-weight: 400 !important;
     }
 
-    /* ซ่อน Header มาตรฐานของ Streamlit */
     header {visibility: hidden;}
     
     /* --- HEADER STYLE --- */
@@ -55,8 +50,8 @@ st.markdown("""
         align-items: center; 
         padding: 20px 30px; 
         margin-bottom: 20px; 
-        background: linear-gradient(135deg, #5A2D81 0%, #4a236e 100%); /* สีม่วง DSD */
-        border-radius: 12px; 
+        background: linear-gradient(135deg, #5A2D81 0%, #4a236e 100%); 
+        border-radius: 16px; /* มนขึ้นนิดนึง */
         box-shadow: 0 4px 15px rgba(90, 45, 129, 0.2); 
         color: white; 
     }
@@ -83,25 +78,25 @@ st.markdown("""
         opacity: 0.9; 
     }
     
-    /* --- FOOTER STYLE --- */
+    /* --- FOOTER STYLE (Light Theme) --- */
     .custom-footer {
-        background: linear-gradient(to right, #2c1342, #1E2A45, #2c1342); 
-        color: #ffffff;
+        background: #FFFFFF; /* เปลี่ยนเป็นพื้นขาว */
+        color: #333333;
         padding: 20px 30px; 
-        border-top: 3px solid #FFD700; /* เส้นสีทอง */
+        border-top: 1px solid #E5E7EB; /* เส้นขอบบางๆ */
         margin-top: 50px;
-        box-shadow: 0 -5px 15px rgba(0,0,0,0.2);
         display: flex; 
         align-items: center; 
         justify-content: flex-start; 
         text-align: left;
+        border-radius: 16px;
     }
     .profile-img {
-        width: 65px !important; 
-        height: 65px !important; 
+        width: 60px !important; 
+        height: 60px !important; 
         object-fit: cover !important;
         border-radius: 50% !important; 
-        border: 2px solid #FFD700 !important;
+        border: 2px solid #5A2D81 !important;
         margin-right: 20px !important; 
         background-color: white; 
         display: inline-block !important;
@@ -111,20 +106,20 @@ st.markdown("""
         flex-direction: column; 
     }
     .footer-header { 
-        color: #FFD700 !important; /* สีทอง */
+        color: #5A2D81 !important; /* หัวข้อสีม่วง */
         font-size: 14px !important; 
         font-weight: 700 !important; 
         text-transform: uppercase; 
         margin-bottom: 5px;
     }
     .footer-text { 
-        color: #E0E0E0 !important; 
+        color: #6B7280 !important; /* เทา */
         font-size: 12px !important; 
         font-weight: 300 !important; 
         margin: 0;
     }
     .footer-link { 
-        color: #FFD700 !important; 
+        color: #5A2D81 !important; 
         text-decoration: none; 
         font-weight: 600 !important; 
     }
@@ -132,7 +127,7 @@ st.markdown("""
         margin-top: 5px;
         font-size: 11px !important;
         opacity: 0.7;
-        color: #aaa !important;
+        color: #9CA3AF !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -153,12 +148,11 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ===================================================
-# 4. MAIN CONTENT (TABS)
+# 4. MAIN CONTENT
 # ===================================================
 tab1, tab2 = st.tabs(["🎓 ออกแบบหลักสูตร (User)", "🛠️ จัดการระบบ (Admin)"])
 
 with tab1:
-    # เรียกใช้ User Page (รวม Chat และ ปุ่มเลือกตัวอย่างไว้ข้างในแล้ว)
     render_user_page()
 
 with tab2:
@@ -168,7 +162,6 @@ with tab2:
 # ===================================================
 # 5. FOOTER SECTION
 # ===================================================
-# หารูป profile.png (ถ้ามี) หรือใช้ logo แทน
 profile_src = get_image_base64("profile.jpg" if os.path.exists("profile.jpg") else "logo_dsd.png")
 
 st.markdown(f"""

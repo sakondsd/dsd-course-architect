@@ -12,125 +12,157 @@ def render_user_page():
             AIMessage(content="สวัสดีครับ! ผมคือ AI ผู้ช่วยออกแบบหลักสูตร\nมีไอเดียอยากจัดอบรมเรื่องอะไร บอกผมได้เลย หรือเลือกตัวอย่างทางขวามือก็ได้ครับ")
         ]
     
-    # --- 2. CSS & STYLING ---
+    # --- 2. CSS & STYLING (ฉบับจัดระเบียบ + แก้สีปุ่ม) ---
     st.markdown("""
     <style>
-        /* ============================================================
-           1. บังคับสีพื้นหลังกล่อง Chat (Left Column)
-           ============================================================ */
-        /* เทคนิค: ค้นหา Container ที่มี "stChatMessage" อยู่ข้างใน แล้วเปลี่ยนสีพื้นหลัง */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.stChatMessage) {
-            background-color: #F0F2F6 !important; /* สีเทา */
-            border: 2px solid #E0E0E0 !important;
-            border-radius: 15px !important;
-        }
-
-        /* สำคัญมาก! ทำให้กล่องข้างใน (Scrollable Area) โปร่งใส เพื่อให้เห็นสีพื้นหลังของกล่องแม่ */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.stChatMessage) div[data-testid="stVerticalBlockBorderWrapper"] {
-            background-color: transparent !important;
-            border: none !important;
+        /* ================= 1. CARDS & CONTAINERS ================= */
+        /* บังคับให้ st.container(border=True) ทุกตัวเป็น Card สีขาวลอยขึ้นมา */
+        div[data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: #FFFFFF !important;
+            border: 1px solid #E5E7EB !important;
+            border-radius: 16px !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
+            padding: 20px !important;
         }
         
-        /* ============================================================
-           2. Chat Bubbles
-           ============================================================ */
-        /* User (เรา) - สีม่วง */
-        [data-testid="stChatMessage"]:has(div[aria-label="user"]) {
-            flex-direction: row-reverse;
-            text-align: right;
+        /* ถมสีขาวลงไปข้างใน Card */
+        div[data-testid="stVerticalBlockBorderWrapper"] > div {
+            background-color: #FFFFFF !important;
         }
+
+        /* ================= 2. CHAT BUBBLES ================= */
+        /* User (เรา) - สีม่วง */
         [data-testid="stChatMessage"]:has(div[aria-label="user"]) div[data-testid="stMarkdownContainer"] {
-            background-color: #5A2D81;
+            background-color: #5A2D81 !important;
             color: #FFFFFF !important;
-            padding: 10px 18px;
-            border-radius: 20px 20px 5px 20px;
+            padding: 12px 18px;
+            border-radius: 18px 18px 4px 18px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         [data-testid="stChatMessage"]:has(div[aria-label="user"]) p { color: #FFFFFF !important; }
 
-        /* AI (บอท) - สีขาว */
-        [data-testid="stChatMessage"]:has(div[aria-label="assistant"]) {
-            flex-direction: row;
-            text-align: left;
-        }
+        /* AI (บอท) - สีเทาอ่อน */
         [data-testid="stChatMessage"]:has(div[aria-label="assistant"]) div[data-testid="stMarkdownContainer"] {
-            background-color: #FFFFFF;
-            color: #333333 !important;
-            padding: 10px 18px;
-            border-radius: 20px 20px 20px 5px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            border: 1px solid #E5E7EB;
+            background-color: #F3F4F6 !important;
+            color: #1F2937 !important;
+            padding: 12px 18px;
+            border-radius: 18px 18px 18px 4px;
         }
         .stChatMessageAvatarImage { display: none; }
 
-        /* ============================================================
-           3. Input Form & Buttons
-           ============================================================ */
-        /* ปรับช่องพิมพ์ */
-        .stTextInput input {
-            border-radius: 25px !important;
-            border: 1px solid #D1D5DB;
-            padding-left: 15px;
-            background-color: #FFFFFF;
+        /* ================= 3. INPUT & BUTTONS ALIGNMENT (แก้จุดที่ 1) ================= */
+        /* ช่องพิมพ์ข้อความ */
+        .stTextArea textarea {
+            border-radius: 25px !important; /* มนเหมือนแคปซูล */
+            border: 1px solid #D1D5DB !important;
+            background-color: #F0F2F6 !important; /* พื้นเทาอ่อนให้เห็นชัด */
+            height: 50px !important; /* กำหนดความสูงแน่นอน */
+            resize: none;
+            padding: 12px 20px;
         }
-        
-        /* ปุ่มส่ง (จรวด) */
+        .stTextArea textarea:focus {
+            border-color: #5A2D81 !important;
+            background-color: #FFFFFF !important;
+            box-shadow: 0 0 0 1px #5A2D81 !important;
+        }
+        .stTextArea label { display: none; }
+
+        /* ปุ่มส่ง (วงกลม) */
         div[data-testid="stFormSubmitButton"] > button {
+            background-color: #5A2D81 !important;
+            color: #FFFFFF !important;
             border-radius: 50% !important;
-            height: 42px;
-            width: 42px;
-            padding: 0 !important;
-            border: none;
-            background-color: #5A2D81;
-            color: white;
+            height: 50px !important; /* สูงเท่าช่องพิมพ์เป๊ะๆ */
+            width: 50px !important;  /* กว้างเท่ากันให้เป็นวงกลม */
+            border: none !important;
             display: flex;
             justify-content: center;
             align-items: center;
-            float: right;
+            box-shadow: 0 2px 5px rgba(90, 45, 129, 0.2) !important;
+            margin: 0 !important; /* ลบ margin ที่อาจทำให้เบี้ยว */
+        }
+        /* ไอคอนในปุ่มส่ง */
+        div[data-testid="stFormSubmitButton"] > button p {
+            font-size: 20px !important;
+            margin: 0 !important;
+            padding-bottom: 2px !important; /* ดันไอคอนขึ้นนิดนึงให้ดู center จริงๆ */
+            color: #FFFFFF !important;
         }
         div[data-testid="stFormSubmitButton"] > button:hover {
-            background-color: #4a236e;
-            color: #FFD700;
+            transform: scale(1.05);
+            background-color: #4a236e !important;
         }
-        /* จัดตำแหน่งปุ่ม */
-        [data-testid="stForm"] [data-testid="column"]:nth-child(2) {
-            display: flex;
-            align-items: flex-end;
-            justify-content: center;
+        
+        /* จัดให้ช่องพิมพ์และปุ่มอยู่ในระนาบเดียวกัน (Align Bottom/Center) */
+        [data-testid="stForm"] [data-testid="column"] {
+             display: flex;
+             align-items: flex-end; /* จัดให้ก้นเสมอกัน */
         }
 
-        /* ปุ่ม Quick Start (ขวามือ) */
-        div.stButton > button {
-            width: 100%;
-            border-radius: 12px;
+        /* ================= 4. QUICK START BUTTONS ================= */
+        button[kind="secondary"] {
+            background-color: #FFFFFF !important;
+            color: #4B5563 !important;
+            border: 1px solid #E5E7EB !important;
+            border-left: 5px solid #5A2D81 !important;
+            border-radius: 8px !important;
+            height: auto !important;
+            padding: 15px !important;
+            font-weight: 500 !important;
+            justify-content: flex-start !important;
+            text-align: left !important;
+            transition: all 0.2s;
+        }
+        button[kind="secondary"]:hover {
+            border-color: #5A2D81 !important;
+            background-color: #F9FAFB !important;
+            color: #5A2D81 !important;
+            transform: translateX(4px) !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+        }
+        
+        /* ================= 5. GENERATE BUTTON COLOR (แก้จุดที่ 2) ================= */
+        /* ปุ่มสร้างหลักสูตร (Primary Button) */
+        button[kind="primary"] {
+            background-color: #5A2D81 !important;
+            color: #FFFFFF !important; /* บังคับสีขาว */
+            border: none !important;
+            border-radius: 10px !important;
             height: 3.5em;
-            border: 1px solid #5A2D81;
-            color: #5A2D81;
-            background-color: white;
-            font-weight: 500;
+            font-weight: 600 !important;
+            box-shadow: 0 4px 10px rgba(90, 45, 129, 0.3) !important;
         }
-        div.stButton > button:hover {
-            background-color: #F3E5F5;
-            border-color: #5A2D81;
+        /* บังคับตัวอักษรข้างในให้ขาวด้วย */
+        button[kind="primary"] p {
+            color: #FFFFFF !important;
         }
+        button[kind="primary"]:hover {
+            background-color: #432063 !important;
+            box-shadow: 0 6px 12px rgba(90, 45, 129, 0.4) !important;
+            color: #FFFFFF !important;
+        }
+        button[kind="primary"]:hover p {
+            color: #FFFFFF !important;
+        }
+
     </style>
     """, unsafe_allow_html=True)
 
     # ==========================================
-    # 🖥️ LAYOUT: แบ่ง 2 คอลัมน์ (ซ้าย 65% | ขวา 35%)
+    # 🖥️ LAYOUT STRUCTURE
     # ==========================================
-    col_chat, col_examples = st.columns([0.65, 0.35], gap="large")
+    
+    col_chat, col_quick = st.columns([0.65, 0.35], gap="medium")
 
-    # 🔴 ส่วนซ้าย: กล่อง Chat ใหญ่ (รวม History + Input ไว้ในกรอบเดียว)
+    # 🟢 LEFT COLUMN: CHAT INTERFACE
     with col_chat:
-        st.markdown("##### 🤖 คุยกับ AI เพื่อร่างหลักสูตร")
+        st.markdown("##### 🤖 DSD Course Assistant")
         
-        # 1. สร้าง "กล่องแม่" (Outer Card) - ตัวนี้จะเป็นสีเทา #F0F2F6 ตาม CSS
+        # กล่อง Card สีขาว (Container)
         with st.container(border=True):
             
-            # 2. สร้าง "กล่องข้อความ" (Scrollable Area) - ตัวนี้จะใส ไม่มีขอบ
-            chat_box = st.container(height=450, border=False) # border=False เพื่อให้เนียนไปกับกล่องแม่
-            
+            # 1. Chat History Area (Scrollable)
+            chat_box = st.container(height=420, border=False)
             with chat_box:
                 for msg in st.session_state["chat_history"]:
                     if isinstance(msg, HumanMessage):
@@ -140,97 +172,105 @@ def render_user_page():
                         with st.chat_message("assistant"):
                             st.markdown(msg.content)
 
-            # 3. ช่องพิมพ์ (Input Form) - อยู่ในกล่องแม่เดียวกัน (ด้านล่าง)
+            # 2. Input Area
+            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
+            
             with st.form(key="chat_form", clear_on_submit=True):
-                c_input, c_btn = st.columns([0.88, 0.12])
+                # ปรับสัดส่วนคอลัมน์เล็กน้อยเพื่อให้ปุ่มกลมพอดี
+                c_input, c_btn = st.columns([0.88, 0.12], gap="small")
+                
                 with c_input:
-                    user_input = st.text_input(
-                        "พิมพ์ข้อความ...", 
-                        label_visibility="collapsed", 
-                        placeholder="พิมพ์ไอเดียที่นี่... (กด Enter เพื่อส่ง)"
+                    user_input = st.text_area(
+                        "Message",
+                        placeholder="พิมพ์ไอเดียที่นี่... (เช่น 'อบรม Excel ให้ฝ่ายบัญชี')",
+                        height=50 # ความสูงต้องตรงกับ CSS
                     )
+                
                 with c_btn:
-                    submitted = st.form_submit_button("🚀")
+                    # ปุ่มส่ง
+                    submitted = st.form_submit_button("➤")
 
                 if submitted and user_input:
-                    # แสดงข้อความทันที
                     with chat_box:
                         with st.chat_message("user"):
                             st.markdown(user_input)
                     st.session_state["chat_history"].append(HumanMessage(content=user_input))
                     
-                    # AI ตอบกลับ
                     with chat_box:
                         with st.chat_message("assistant"):
-                            with st.spinner("..."):
+                            with st.spinner("กำลังคิด..."):
                                 response_text, extracted_data = consult_and_fill(st.session_state["chat_history"], user_input)
                                 st.markdown(response_text)
                     st.session_state["chat_history"].append(AIMessage(content=response_text))
                     
-                    # Auto Fill Logic
                     if extracted_data:
-                        st.session_state["job_title"] = extracted_data.get("job_title", "")
-                        st.session_state["duration"] = extracted_data.get("duration", "")
-                        st.session_state["objectives"] = extracted_data.get("objectives", "")
-                        st.session_state["context"] = extracted_data.get("context", "")
-                        
-                        final_msg = "✅ **ผมเติมข้อมูลลงในแบบฟอร์มด้านล่างให้เรียบร้อยแล้วครับ!**"
-                        st.session_state["chat_history"].append(AIMessage(content=final_msg))
+                        st.session_state.update(extracted_data)
                         st.rerun()
 
-    # 🟠 ส่วนขวา: เลือกตัวอย่าง
-    with col_examples:
-        st.markdown("##### 💡 เลือกตัวอย่าง (Quick Start)")
-        st.caption("คลิกเพื่อเติมข้อมูลอัตโนมัติ")
+    # 🟠 RIGHT COLUMN: QUICK START
+    with col_quick:
+        st.markdown("##### 💡 Quick Start")
+        st.caption("เลือกตัวอย่างเพื่อเริ่มทันที")
         
-        with st.container(border=True):
-            if st.button("⚡ ช่างไฟฟ้าภายในอาคาร"):
-                st.session_state["job_title"] = "ช่างไฟฟ้าภายในอาคาร ระดับ 1"
-                st.session_state["duration"] = "30 ชั่วโมง (5 วัน)"
-                st.session_state["objectives"] = "เดินสายไฟไม่สวยงาม, ต่อวงจรผิดพลาดบ่อย"
-                st.session_state["context"] = "เน้นปฏิบัติ 80%, เตรียมทดสอบมาตรฐาน"
-                st.toast("✅ โหลดข้อมูลเรียบร้อย!")
-                st.rerun()
+        # ปุ่มเหล่านี้ Streamlit จะให้เป็น kind="secondary" โดยอัตโนมัติ (เข้ากับ CSS ข้างบน)
+        if st.button("⚡ ช่างไฟฟ้าภายในอาคาร\n(หลักสูตรมาตรฐาน 30 ชม.)"):
+            st.session_state.update({
+                "job_title": "ช่างไฟฟ้าภายในอาคาร ระดับ 1",
+                "duration": "30 ชั่วโมง (5 วัน)",
+                "objectives": "เดินสายไฟไม่สวยงาม, ต่อวงจรผิดพลาดบ่อย",
+                "context": "เน้นปฏิบัติ 80%, เตรียมทดสอบมาตรฐาน"
+            })
+            st.toast("โหลดข้อมูลแล้ว!", icon="⚡")
+            st.rerun()
 
-            if st.button("🏥 ผู้ดูแลผู้สูงอายุ"):
-                st.session_state["job_title"] = "พนักงานดูแลผู้สูงอายุ (Caregiver)"
-                st.session_state["duration"] = "18 ชั่วโมง (3 วัน)"
-                st.session_state["objectives"] = "ขาดทักษะปฐมพยาบาล, เคลื่อนย้ายผู้ป่วยผิดวิธี"
-                st.session_state["context"] = "เน้นฝึกกับหุ่นจำลอง"
-                st.toast("✅ โหลดข้อมูลเรียบร้อย!")
-                st.rerun()
+        if st.button("🏥 ผู้ดูแลผู้สูงอายุ\n(เน้นปฏิบัติจริง 18 ชม.)"):
+            st.session_state.update({
+                "job_title": "พนักงานดูแลผู้สูงอายุ (Caregiver)",
+                "duration": "18 ชั่วโมง (3 วัน)",
+                "objectives": "ขาดทักษะปฐมพยาบาล, เคลื่อนย้ายผู้ป่วยผิดวิธี",
+                "context": "เน้นฝึกกับหุ่นจำลอง"
+            })
+            st.toast("โหลดข้อมูลแล้ว!", icon="🏥")
+            st.rerun()
 
-            if st.button("📱 นักการตลาดออนไลน์"):
-                st.session_state["job_title"] = "นักการตลาดออนไลน์"
-                st.session_state["duration"] = "12 ชั่วโมง (2 วัน)"
-                st.session_state["objectives"] = "เขียนแคปชั่นไม่ดึงดูด, ยิงโฆษณาไม่ตรงกลุ่ม"
-                st.session_state["context"] = "เน้นใช้ Smartphone และ AI ช่วยทำงาน"
-                st.toast("✅ โหลดข้อมูลเรียบร้อย!")
-                st.rerun()
-                
-            if st.button("📊 Power BI หัวหน้างาน"):
-                st.session_state["job_title"] = "หัวหน้างาน/ผู้จัดการ"
-                st.session_state["duration"] = "12 ชั่วโมง (2 วัน)"
-                st.session_state["objectives"] = "วิเคราะห์ข้อมูลช้า, ทำ Dashboard ไม่เป็น"
-                st.session_state["context"] = "ผู้เรียนพอมีพื้นฐาน Excel มาบ้าง"
-                st.toast("✅ โหลดข้อมูลเรียบร้อย!")
-                st.rerun()
+        if st.button("📱 นักการตลาดออนไลน์\n(Upskill AI & Content)"):
+            st.session_state.update({
+                "job_title": "นักการตลาดออนไลน์",
+                "duration": "12 ชั่วโมง (2 วัน)",
+                "objectives": "เขียนแคปชั่นไม่ดึงดูด, ยิงโฆษณาไม่ตรงกลุ่ม",
+                "context": "เน้นใช้ Smartphone และ AI ช่วยทำงาน"
+            })
+            st.toast("โหลดข้อมูลแล้ว!", icon="📱")
+            st.rerun()
+            
+        if st.button("📊 Power BI หัวหน้างาน\n(Data Analysis for Manager)"):
+            st.session_state.update({
+                "job_title": "หัวหน้างาน/ผู้จัดการ",
+                "duration": "12 ชั่วโมง (2 วัน)",
+                "objectives": "วิเคราะห์ข้อมูลช้า, ทำ Dashboard ไม่เป็น",
+                "context": "ผู้เรียนพอมีพื้นฐาน Excel มาบ้าง"
+            })
+            st.toast("โหลดข้อมูลแล้ว!", icon="📊")
+            st.rerun()
 
     st.markdown("---")
 
     # ==========================================
-    # 📝 Form Section
+    # 📝 FORM SECTION
     # ==========================================
-    with st.expander("📝 ตรวจสอบและแก้ไขข้อมูล (คลิกเพื่อเปิด)", expanded=True):
-        st.markdown("##### รายละเอียดโครงการ")
+    st.subheader("📝 ตรวจสอบและสร้างหลักสูตร")
+    
+    with st.container(border=True): # Card สีขาว
         col1, col2 = st.columns(2)
         with col1:
-            job_title = st.text_input("1. ตำแหน่งงาน/กลุ่มเป้าหมาย", key="job_title")
-            problem = st.text_area("3. ปัญหา/สิ่งที่ต้องการพัฒนา", height=150, key="objectives")
+            job_title = st.text_input("1. กลุ่มเป้าหมาย", key="job_title", placeholder="เช่น ช่างไฟฟ้า, พนักงานบัญชี")
+            problem = st.text_area("3. ปัญหา/สิ่งที่ต้องการพัฒนา", height=120, key="objectives")
         with col2:
-            duration = st.text_input("2. ระยะเวลาฝึกอบรม", key="duration")
-            context = st.text_area("4. บริบทเพิ่มเติม", height=150, key="context")
+            duration = st.text_input("2. ระยะเวลา", key="duration", placeholder="เช่น 6 ชั่วโมง, 2 วัน")
+            context = st.text_area("4. บริบทเพิ่มเติม", height=120, key="context")
 
+        st.markdown("###") 
+        # ใช้ type="primary" เพื่อให้ CSS จับ button[kind="primary"] ได้
         generate_btn = st.button("✨ สร้างหลักสูตร (Generate Course)", type="primary", use_container_width=True)
 
     # Process Logic

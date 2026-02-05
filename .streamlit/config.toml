@@ -1,8 +1,8 @@
 [theme]
 base = "light"
 primaryColor = "#5A2D81"
-backgroundColor = "#FFFFFF"
-secondaryBackgroundColor = "#F9F7FC"
+backgroundColor = "#F5F7F9"  # <--- เปลี่ยนเป็นสีเทาอ่อนที่นี่ (จบปัญหาพื้นหลังขาว)
+secondaryBackgroundColor = "#FFFFFF" # แถบข้างหรือ Input ให้เป็นสีขาว
 textColor = "#333333"
 font = "sans serif"
 
