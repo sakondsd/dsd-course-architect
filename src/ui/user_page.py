@@ -12,26 +12,28 @@ def render_user_page():
             AIMessage(content="สวัสดีครับ! ผมคือ AI ผู้ช่วยออกแบบหลักสูตร\nมีไอเดียอยากจัดอบรมเรื่องอะไร บอกผมได้เลย หรือเลือกตัวอย่างทางขวามือก็ได้ครับ")
         ]
     
-    # --- 2. CSS & STYLING (ฉบับแก้ไข: จัดระเบียบปุ่ม + บังคับสีพื้นหลัง) ---
+    # --- 2. CSS & STYLING ---
     st.markdown("""
     <style>
-        /* ----------------------------------------------------
-           1. บังคับสีพื้นหลังกล่อง Chat (สีเทา)
-           ---------------------------------------------------- */
-        /* เจาะจงไปที่กล่องที่มีข้อความ Chat อยู่ข้างใน */
+        /* ============================================================
+           1. บังคับสีพื้นหลังกล่อง Chat (Left Column)
+           ============================================================ */
+        /* เทคนิค: ค้นหา Container ที่มี "stChatMessage" อยู่ข้างใน แล้วเปลี่ยนสีพื้นหลัง */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(.stChatMessage) {
             background-color: #F0F2F6 !important; /* สีเทา */
             border: 2px solid #E0E0E0 !important;
-        }
-        /* บังคับทุก Layer ข้างในให้เป็นสีเทาด้วย (แก้ปัญหาพื้นหลังขาวซ้อน) */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.stChatMessage) > div,
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(.stChatMessage) > div > div {
-            background-color: #F0F2F6 !important;
+            border-radius: 15px !important;
         }
 
-        /* ----------------------------------------------------
-           2. ปรับแต่ง Bubble ข้อความ
-           ---------------------------------------------------- */
+        /* สำคัญมาก! ทำให้กล่องข้างใน (Scrollable Area) โปร่งใส เพื่อให้เห็นสีพื้นหลังของกล่องแม่ */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(.stChatMessage) div[data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: transparent !important;
+            border: none !important;
+        }
+        
+        /* ============================================================
+           2. Chat Bubbles
+           ============================================================ */
         /* User (เรา) - สีม่วง */
         [data-testid="stChatMessage"]:has(div[aria-label="user"]) {
             flex-direction: row-reverse;
@@ -61,21 +63,22 @@ def render_user_page():
         }
         .stChatMessageAvatarImage { display: none; }
 
-        /* ----------------------------------------------------
-           3. ปรับแต่งช่องพิมพ์และปุ่มส่ง (Layout ใหม่)
-           ---------------------------------------------------- */
-        /* ปรับช่องพิมพ์ให้มนขึ้น */
+        /* ============================================================
+           3. Input Form & Buttons
+           ============================================================ */
+        /* ปรับช่องพิมพ์ */
         .stTextInput input {
-            border-radius: 30px !important;
+            border-radius: 25px !important;
             border: 1px solid #D1D5DB;
             padding-left: 15px;
+            background-color: #FFFFFF;
         }
         
-        /* ปรับปุ่มส่ง (จรวด) ให้เป็นวงกลมสวยๆ หรือสี่เหลี่ยมมน */
+        /* ปุ่มส่ง (จรวด) */
         div[data-testid="stFormSubmitButton"] > button {
-            border-radius: 50% !important; /* ทำเป็นปุ่มกลม */
-            height: 45px;
-            width: 45px;
+            border-radius: 50% !important;
+            height: 42px;
+            width: 42px;
             padding: 0 !important;
             border: none;
             background-color: #5A2D81;
@@ -83,23 +86,20 @@ def render_user_page():
             display: flex;
             justify-content: center;
             align-items: center;
-            float: right; /* ชิดขวา */
+            float: right;
         }
         div[data-testid="stFormSubmitButton"] > button:hover {
             background-color: #4a236e;
             color: #FFD700;
         }
-        
-        /* จัดตำแหน่งปุ่มให้ตรงกับช่องพิมพ์ */
+        /* จัดตำแหน่งปุ่ม */
         [data-testid="stForm"] [data-testid="column"]:nth-child(2) {
             display: flex;
-            align-items: flex-end; /* ดันปุ่มลงมาข้างล่างให้เสมอช่องพิมพ์ */
+            align-items: flex-end;
             justify-content: center;
         }
 
-        /* ----------------------------------------------------
-           4. ปุ่ม Quick Start (ขวามือ)
-           ---------------------------------------------------- */
+        /* ปุ่ม Quick Start (ขวามือ) */
         div.stButton > button {
             width: 100%;
             border-radius: 12px;
@@ -121,65 +121,64 @@ def render_user_page():
     # ==========================================
     col_chat, col_examples = st.columns([0.65, 0.35], gap="large")
 
-    # 🔴 ส่วนซ้าย: Chat + Input (รวมอยู่ในคอลัมน์นี้ตามภาพวาด)
+    # 🔴 ส่วนซ้าย: กล่อง Chat ใหญ่ (รวม History + Input ไว้ในกรอบเดียว)
     with col_chat:
         st.markdown("##### 🤖 คุยกับ AI เพื่อร่างหลักสูตร")
         
-        # 1. Chat Box (Container)
-        chat_container = st.container(height=480, border=True)
-        
-        with chat_container:
-            for msg in st.session_state["chat_history"]:
-                if isinstance(msg, HumanMessage):
-                    with st.chat_message("user"):
-                        st.markdown(msg.content)
-                elif isinstance(msg, AIMessage):
-                    with st.chat_message("assistant"):
-                        st.markdown(msg.content)
-
-        # 2. Input Area (Form) - วางไว้ใต้ Chat Box ทันที
-        with st.form(key="chat_form", clear_on_submit=True):
-            # แบ่งคอลัมน์สำหรับ "ช่องพิมพ์" (85%) และ "ปุ่มส่ง" (15%)
-            c_input, c_btn = st.columns([0.85, 0.15])
+        # 1. สร้าง "กล่องแม่" (Outer Card) - ตัวนี้จะเป็นสีเทา #F0F2F6 ตาม CSS
+        with st.container(border=True):
             
-            with c_input:
-                user_input = st.text_input(
-                    "พิมพ์ข้อความ...", 
-                    label_visibility="collapsed", 
-                    placeholder="พิมพ์ไอเดียที่นี่... (กด Enter เพื่อส่ง)"
-                )
+            # 2. สร้าง "กล่องข้อความ" (Scrollable Area) - ตัวนี้จะใส ไม่มีขอบ
+            chat_box = st.container(height=450, border=False) # border=False เพื่อให้เนียนไปกับกล่องแม่
             
-            with c_btn:
-                # ปุ่มส่งรูปจรวด
-                submitted = st.form_submit_button("🚀")
+            with chat_box:
+                for msg in st.session_state["chat_history"]:
+                    if isinstance(msg, HumanMessage):
+                        with st.chat_message("user"):
+                            st.markdown(msg.content)
+                    elif isinstance(msg, AIMessage):
+                        with st.chat_message("assistant"):
+                            st.markdown(msg.content)
 
-            if submitted and user_input:
-                # 2.1 แสดงข้อความ User
-                with chat_container:
-                    with st.chat_message("user"):
-                        st.markdown(user_input)
-                st.session_state["chat_history"].append(HumanMessage(content=user_input))
-                
-                # 2.2 AI ตอบกลับ
-                with chat_container:
-                    with st.chat_message("assistant"):
-                        with st.spinner("..."):
-                            response_text, extracted_data = consult_and_fill(st.session_state["chat_history"], user_input)
-                            st.markdown(response_text)
-                st.session_state["chat_history"].append(AIMessage(content=response_text))
-                
-                # 2.3 Auto Fill
-                if extracted_data:
-                    st.session_state["job_title"] = extracted_data.get("job_title", "")
-                    st.session_state["duration"] = extracted_data.get("duration", "")
-                    st.session_state["objectives"] = extracted_data.get("objectives", "")
-                    st.session_state["context"] = extracted_data.get("context", "")
+            # 3. ช่องพิมพ์ (Input Form) - อยู่ในกล่องแม่เดียวกัน (ด้านล่าง)
+            with st.form(key="chat_form", clear_on_submit=True):
+                c_input, c_btn = st.columns([0.88, 0.12])
+                with c_input:
+                    user_input = st.text_input(
+                        "พิมพ์ข้อความ...", 
+                        label_visibility="collapsed", 
+                        placeholder="พิมพ์ไอเดียที่นี่... (กด Enter เพื่อส่ง)"
+                    )
+                with c_btn:
+                    submitted = st.form_submit_button("🚀")
+
+                if submitted and user_input:
+                    # แสดงข้อความทันที
+                    with chat_box:
+                        with st.chat_message("user"):
+                            st.markdown(user_input)
+                    st.session_state["chat_history"].append(HumanMessage(content=user_input))
                     
-                    final_msg = "✅ **ผมเติมข้อมูลลงในแบบฟอร์มด้านล่างให้เรียบร้อยแล้วครับ!**"
-                    st.session_state["chat_history"].append(AIMessage(content=final_msg))
-                    st.rerun()
+                    # AI ตอบกลับ
+                    with chat_box:
+                        with st.chat_message("assistant"):
+                            with st.spinner("..."):
+                                response_text, extracted_data = consult_and_fill(st.session_state["chat_history"], user_input)
+                                st.markdown(response_text)
+                    st.session_state["chat_history"].append(AIMessage(content=response_text))
+                    
+                    # Auto Fill Logic
+                    if extracted_data:
+                        st.session_state["job_title"] = extracted_data.get("job_title", "")
+                        st.session_state["duration"] = extracted_data.get("duration", "")
+                        st.session_state["objectives"] = extracted_data.get("objectives", "")
+                        st.session_state["context"] = extracted_data.get("context", "")
+                        
+                        final_msg = "✅ **ผมเติมข้อมูลลงในแบบฟอร์มด้านล่างให้เรียบร้อยแล้วครับ!**"
+                        st.session_state["chat_history"].append(AIMessage(content=final_msg))
+                        st.rerun()
 
-    # 🟠 ส่วนขวา: Quick Start (แยกออกมาอยู่อีกคอลัมน์)
+    # 🟠 ส่วนขวา: เลือกตัวอย่าง
     with col_examples:
         st.markdown("##### 💡 เลือกตัวอย่าง (Quick Start)")
         st.caption("คลิกเพื่อเติมข้อมูลอัตโนมัติ")
@@ -220,7 +219,7 @@ def render_user_page():
     st.markdown("---")
 
     # ==========================================
-    # 📝 Form Section (ส่วนตรวจสอบข้อมูล)
+    # 📝 Form Section
     # ==========================================
     with st.expander("📝 ตรวจสอบและแก้ไขข้อมูล (คลิกเพื่อเปิด)", expanded=True):
         st.markdown("##### รายละเอียดโครงการ")
@@ -234,9 +233,7 @@ def render_user_page():
 
         generate_btn = st.button("✨ สร้างหลักสูตร (Generate Course)", type="primary", use_container_width=True)
 
-    # ==========================================
-    # 🚀 Process
-    # ==========================================
+    # Process Logic
     if generate_btn:
         if not job_title or not duration:
             st.warning("⚠️ กรุณากรอกข้อมูลให้ครบถ้วน")
