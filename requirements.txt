@@ -1,10 +1,12 @@
 streamlit
 python-dotenv
+python-docx
+langchain
 langchain-google-genai
 langchain-community
 langchain-core
+google-generativeai
 langchain-huggingface
 faiss-cpu
 pypdf2
 sentence-transformers
-python-docx
