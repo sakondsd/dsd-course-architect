@@ -1,304 +1,330 @@
 import streamlit as st
+import base64
+import os
 from src.logic.doc_generator import create_word_docx 
 from src.logic.ai_engine import generate_course_design
 from src.logic.data_manager import search_rules
 from src.logic.chat_consultant import consult_and_fill
 from langchain_core.messages import HumanMessage, AIMessage
 
-def render_user_page():
-    # --- 1. Initialize Session ---
-    if "chat_history" not in st.session_state:
-        st.session_state["chat_history"] = [
-            AIMessage(content="สวัสดีครับ! ผมคือ AI ผู้ช่วยออกแบบหลักสูตร\nมีไอเดียอยากจัดอบรมเรื่องอะไร บอกผมได้เลย หรือเลือกตัวอย่างทางขวามือก็ได้ครับ")
-        ]
-    
-    # --- 2. CSS & STYLING (ฉบับจัดระเบียบ + แก้สีปุ่ม) ---
+# ==========================================
+# 🔧 HELPER: แปลงรูปเป็น Base64
+# ==========================================
+def get_img_as_base64(file_path):
+    if not os.path.exists(file_path):
+        return ""
+    with open(file_path, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+# ==========================================
+# 🎨 CSS & ASSETS
+# ==========================================
+def load_custom_css():
     st.markdown("""
     <style>
-        /* ================= 1. CARDS & CONTAINERS ================= */
-        /* บังคับให้ st.container(border=True) ทุกตัวเป็น Card สีขาวลอยขึ้นมา */
-        div[data-testid="stVerticalBlockBorderWrapper"] {
-            background-color: #FFFFFF !important;
-            border: 1px solid #E5E7EB !important;
-            border-radius: 16px !important;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05) !important;
-            padding: 20px !important;
+        @import url('https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap');
+        
+        /* 1. HEADER SECTION */
+        .header-container {
+            /* ✅ แก้ไข: ใส่ภาพพื้นหลังกลับมา และเพิ่ม Overlay สีม่วงเข้มทับเพื่อให้ตัวหนังสืออ่านง่าย */
+            background-image: linear-gradient(to right, rgba(75, 44, 104, 0.9), rgba(46, 20, 64, 0.9)), 
+                              url('https://images.unsplash.com/photo-1534972195531-d756b9bfa9f2?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            border-radius: 15px;
+            padding: 20px 30px;
+            color: white;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            display: flex; 
+            align-items: center;
+            gap: 25px;
         }
         
-        /* ถมสีขาวลงไปข้างใน Card */
-        div[data-testid="stVerticalBlockBorderWrapper"] > div {
-            background-color: #FFFFFF !important;
+        .header-text-block {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
-        /* ================= 2. CHAT BUBBLES ================= */
-        /* User (เรา) - สีม่วง */
-        [data-testid="stChatMessage"]:has(div[aria-label="user"]) div[data-testid="stMarkdownContainer"] {
-            background-color: #5A2D81 !important;
-            color: #FFFFFF !important;
-            padding: 12px 18px;
-            border-radius: 18px 18px 4px 18px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        .header-title {
+            font-family: 'Prompt', sans-serif;
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.6);
         }
-        [data-testid="stChatMessage"]:has(div[aria-label="user"]) p { color: #FFFFFF !important; }
+        .header-subtitle {
+            font-family: 'Prompt', sans-serif;
+            font-size: 1rem;
+            margin-top: 5px;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+        
+        .header-logo-img {
+            height: 75px;
+            width: auto;
+            object-fit: contain;
+            filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3));
+        }
 
-        /* AI (บอท) - สีเทาอ่อน */
-        [data-testid="stChatMessage"]:has(div[aria-label="assistant"]) div[data-testid="stMarkdownContainer"] {
-            background-color: #F3F4F6 !important;
-            color: #1F2937 !important;
-            padding: 12px 18px;
-            border-radius: 18px 18px 18px 4px;
-        }
-        .stChatMessageAvatarImage { display: none; }
-
-        /* ================= 3. INPUT & BUTTONS ALIGNMENT (แก้จุดที่ 1) ================= */
-        /* ช่องพิมพ์ข้อความ */
-        .stTextArea textarea {
-            border-radius: 25px !important; /* มนเหมือนแคปซูล */
-            border: 1px solid #D1D5DB !important;
-            background-color: #F0F2F6 !important; /* พื้นเทาอ่อนให้เห็นชัด */
-            height: 50px !important; /* กำหนดความสูงแน่นอน */
-            resize: none;
-            padding: 12px 20px;
-        }
-        .stTextArea textarea:focus {
-            border-color: #5A2D81 !important;
-            background-color: #FFFFFF !important;
-            box-shadow: 0 0 0 1px #5A2D81 !important;
-        }
-        .stTextArea label { display: none; }
-
-        /* ปุ่มส่ง (วงกลม) */
-        div[data-testid="stFormSubmitButton"] > button {
-            background-color: #5A2D81 !important;
-            color: #FFFFFF !important;
-            border-radius: 50% !important;
-            height: 50px !important; /* สูงเท่าช่องพิมพ์เป๊ะๆ */
-            width: 50px !important;  /* กว้างเท่ากันให้เป็นวงกลม */
-            border: none !important;
+        /* 2. FOOTER SECTION (✅ แก้ไข: ปรับขนาดให้ใหญ่ขึ้น) */
+        .footer-container {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid #444;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 2px 5px rgba(90, 45, 129, 0.2) !important;
-            margin: 0 !important; /* ลบ margin ที่อาจทำให้เบี้ยว */
-        }
-        /* ไอคอนในปุ่มส่ง */
-        div[data-testid="stFormSubmitButton"] > button p {
-            font-size: 20px !important;
-            margin: 0 !important;
-            padding-bottom: 2px !important; /* ดันไอคอนขึ้นนิดนึงให้ดู center จริงๆ */
-            color: #FFFFFF !important;
-        }
-        div[data-testid="stFormSubmitButton"] > button:hover {
-            transform: scale(1.05);
-            background-color: #4a236e !important;
-        }
-        
-        /* จัดให้ช่องพิมพ์และปุ่มอยู่ในระนาบเดียวกัน (Align Bottom/Center) */
-        [data-testid="stForm"] [data-testid="column"] {
-             display: flex;
-             align-items: flex-end; /* จัดให้ก้นเสมอกัน */
+            gap: 20px;
         }
 
-        /* ================= 4. QUICK START BUTTONS ================= */
-        button[kind="secondary"] {
-            background-color: #FFFFFF !important;
-            color: #4B5563 !important;
-            border: 1px solid #E5E7EB !important;
-            border-left: 5px solid #5A2D81 !important;
-            border-radius: 8px !important;
-            height: auto !important;
-            padding: 15px !important;
-            font-weight: 500 !important;
-            justify-content: flex-start !important;
-            text-align: left !important;
+        .footer-text {
+            color: #aaa;
+            font-size: 0.95rem; /* เพิ่มขนาดตัวอักษร */
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .footer-profile-img {
+            width: 60px;  /* ✅ เพิ่มขนาดรูปโปรไฟล์ */
+            height: 60px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #8e44ad; /* ขอบหนาขึ้นเล็กน้อย */
+        }
+
+        /* 3. QUICK START AREA */
+        /* ✅ เพิ่ม CSS สำหรับรูปภาพในส่วน Quick Start */
+        .quickstart-img-container {
+            margin-bottom: 15px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .quickstart-img {
+            width: 100%;
+            height: 120px; /* กำหนดความสูงไม่ให้กินพื้นที่มากเกินไป */
+            object-fit: cover;
+            display: block;
+        }
+
+        div.stButton > button {
+            width: 100%;
+            border-radius: 10px;
+            text-align: left;
+            border: 1px solid #3e405b;
+            background-color: #2b2d42;
+            color: #e0e0e0;
             transition: all 0.2s;
+            margin-bottom: 8px; /* ระยะห่างระหว่างปุ่ม */
+            padding: 12px 15px;
         }
-        button[kind="secondary"]:hover {
-            border-color: #5A2D81 !important;
-            background-color: #F9FAFB !important;
-            color: #5A2D81 !important;
-            transform: translateX(4px) !important;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+        div.stButton > button:hover {
+            border-color: #8e44ad;
+            background-color: #383a54;
+            color: white;
+            transform: translateX(5px);
         }
         
-        /* ================= 5. GENERATE BUTTON COLOR (แก้จุดที่ 2) ================= */
-        /* ปุ่มสร้างหลักสูตร (Primary Button) */
-        button[kind="primary"] {
-            background-color: #5A2D81 !important;
-            color: #FFFFFF !important; /* บังคับสีขาว */
-            border: none !important;
-            border-radius: 10px !important;
-            height: 3.5em;
-            font-weight: 600 !important;
-            box-shadow: 0 4px 10px rgba(90, 45, 129, 0.3) !important;
+        /* 4. FORM STYLING */
+        div[data-testid="stForm"] {
+            background-color: #1a1c24;
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #333;
         }
-        /* บังคับตัวอักษรข้างในให้ขาวด้วย */
-        button[kind="primary"] p {
-            color: #FFFFFF !important;
+        /* ปรับสี Placeholder ให้ดูจางๆ */
+        ::placeholder { 
+            color: #666 !important;
+            opacity: 1;
         }
-        button[kind="primary"]:hover {
-            background-color: #432063 !important;
-            box-shadow: 0 6px 12px rgba(90, 45, 129, 0.4) !important;
-            color: #FFFFFF !important;
-        }
-        button[kind="primary"]:hover p {
-            color: #FFFFFF !important;
-        }
-
     </style>
     """, unsafe_allow_html=True)
 
-    # ==========================================
-    # 🖥️ LAYOUT STRUCTURE
-    # ==========================================
-    
-    col_chat, col_quick = st.columns([0.65, 0.35], gap="medium")
+# ==========================================
+# 🧩 PART 1: HEADER
+# ==========================================
+def render_header():
+    logo_path = "static/logo_dsd.png"
+    img_b64 = get_img_as_base64(logo_path)
+    img_tag = f'<img src="data:image/png;base64,{img_b64}" class="header-logo-img">' if img_b64 else ''
 
-    # 🟢 LEFT COLUMN: CHAT INTERFACE
-    with col_chat:
-        st.markdown("##### 🤖 DSD Course Assistant")
+    st.markdown(f"""
+        <div class="header-container">
+            {img_tag}
+            <div class="header-text-block">
+                <p class="header-title">DSD Course Architect</p>
+                <p class="header-subtitle">ระบบออกแบบหลักสูตรพัฒนาฝีมือแรงงานอัจฉริยะ ด้วย AI</p>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# ==========================================
+# 🧩 PART 2: CHAT & QUICK START
+# ==========================================
+def render_chat_and_ideas():
+    st.markdown("###")
+    # ปรับสัดส่วนคอลัมน์เล็กน้อยเพื่อให้ Quick Start มีพื้นที่มากขึ้น
+    col_chat, col_ideas = st.columns([0.6, 0.4], gap="large")
+
+    # --- ส่วนขวา: Quick Start ---
+    with col_ideas:
+        st.subheader("💡 Quick Start Ideas")
         
-        # กล่อง Card สีขาว (Container)
-        with st.container(border=True):
-            
-            # 1. Chat History Area (Scrollable)
-            chat_box = st.container(height=420, border=False)
-            with chat_box:
-                for msg in st.session_state["chat_history"]:
-                    if isinstance(msg, HumanMessage):
-                        with st.chat_message("user"):
-                            st.markdown(msg.content)
-                    elif isinstance(msg, AIMessage):
-                        with st.chat_message("assistant"):
-                            st.markdown(msg.content)
-
-            # 2. Input Area
-            st.markdown("<div style='margin-top: 15px;'></div>", unsafe_allow_html=True)
-            
-            with st.form(key="chat_form", clear_on_submit=True):
-                # ปรับสัดส่วนคอลัมน์เล็กน้อยเพื่อให้ปุ่มกลมพอดี
-                c_input, c_btn = st.columns([0.88, 0.12], gap="small")
-                
-                with c_input:
-                    user_input = st.text_area(
-                        "Message",
-                        placeholder="พิมพ์ไอเดียที่นี่... (เช่น 'อบรม Excel ให้ฝ่ายบัญชี')",
-                        height=50 # ความสูงต้องตรงกับ CSS
-                    )
-                
-                with c_btn:
-                    # ปุ่มส่ง
-                    submitted = st.form_submit_button("➤")
-
-                if submitted and user_input:
-                    with chat_box:
-                        with st.chat_message("user"):
-                            st.markdown(user_input)
-                    st.session_state["chat_history"].append(HumanMessage(content=user_input))
-                    
-                    with chat_box:
-                        with st.chat_message("assistant"):
-                            with st.spinner("กำลังคิด..."):
-                                response_text, extracted_data = consult_and_fill(st.session_state["chat_history"], user_input)
-                                st.markdown(response_text)
-                    st.session_state["chat_history"].append(AIMessage(content=response_text))
-                    
-                    if extracted_data:
-                        st.session_state.update(extracted_data)
-                        st.rerun()
-
-    # 🟠 RIGHT COLUMN: QUICK START
-    with col_quick:
-        st.markdown("##### 💡 Quick Start")
-        st.caption("เลือกตัวอย่างเพื่อเริ่มทันที")
+        # ✅ แก้ไข: เพิ่มรูปภาพประกอบในส่วน Quick Start
+        st.markdown("""
+            <div class="quickstart-img-container">
+                <img src="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=80&w=2070&auto=format&fit=crop" class="quickstart-img" alt="Ideas">
+            </div>
+        """, unsafe_allow_html=True)
         
-        # ปุ่มเหล่านี้ Streamlit จะให้เป็น kind="secondary" โดยอัตโนมัติ (เข้ากับ CSS ข้างบน)
-        if st.button("⚡ ช่างไฟฟ้าภายในอาคาร\n(หลักสูตรมาตรฐาน 30 ชม.)"):
-            st.session_state.update({
+        # ✅ แก้ไข: เพิ่มเป็น 5 หลักสูตร
+        if st.button("⚡ ช่างไฟฟ้าภายในอาคาร (30 ชม.)"):
+            return {
                 "job_title": "ช่างไฟฟ้าภายในอาคาร ระดับ 1",
                 "duration": "30 ชั่วโมง (5 วัน)",
-                "objectives": "เดินสายไฟไม่สวยงาม, ต่อวงจรผิดพลาดบ่อย",
-                "context": "เน้นปฏิบัติ 80%, เตรียมทดสอบมาตรฐาน"
-            })
-            st.toast("โหลดข้อมูลแล้ว!", icon="⚡")
-            st.rerun()
-
-        if st.button("🏥 ผู้ดูแลผู้สูงอายุ\n(เน้นปฏิบัติจริง 18 ชม.)"):
-            st.session_state.update({
-                "job_title": "พนักงานดูแลผู้สูงอายุ (Caregiver)",
+                "problem": "การติดตั้งเดินสายไฟไม่ได้มาตรฐาน ความปลอดภัยต่ำ",
+                "context": "เน้นปฏิบัติ 80% เตรียมทดสอบมาตรฐานฝีมือแรงงาน"
+            }
+        if st.button("🏥 ผู้ดูแลผู้สูงอายุ (18 ชม.)"):
+             return {
+                "job_title": "ผู้ดูแลผู้สูงอายุ (Caregiver)",
                 "duration": "18 ชั่วโมง (3 วัน)",
-                "objectives": "ขาดทักษะปฐมพยาบาล, เคลื่อนย้ายผู้ป่วยผิดวิธี",
-                "context": "เน้นฝึกกับหุ่นจำลอง"
-            })
-            st.toast("โหลดข้อมูลแล้ว!", icon="🏥")
-            st.rerun()
-
-        if st.button("📱 นักการตลาดออนไลน์\n(Upskill AI & Content)"):
-            st.session_state.update({
-                "job_title": "นักการตลาดออนไลน์",
+                "problem": "ขาดทักษะการปฐมพยาบาลและการเคลื่อนย้ายผู้ป่วยที่ถูกวิธี",
+                "context": "ฝึกกับหุ่นจำลองสถานการณ์จริง มีอุปกรณ์ครบครัน"
+            }
+        if st.button("📊 Data Analysis for Manager (12 ชม.)"):
+             return {
+                "job_title": "หัวหน้างาน/ผู้จัดการฝ่ายผลิต",
                 "duration": "12 ชั่วโมง (2 วัน)",
-                "objectives": "เขียนแคปชั่นไม่ดึงดูด, ยิงโฆษณาไม่ตรงกลุ่ม",
-                "context": "เน้นใช้ Smartphone และ AI ช่วยทำงาน"
-            })
-            st.toast("โหลดข้อมูลแล้ว!", icon="📱")
-            st.rerun()
-            
-        if st.button("📊 Power BI หัวหน้างาน\n(Data Analysis for Manager)"):
-            st.session_state.update({
-                "job_title": "หัวหน้างาน/ผู้จัดการ",
-                "duration": "12 ชั่วโมง (2 วัน)",
-                "objectives": "วิเคราะห์ข้อมูลช้า, ทำ Dashboard ไม่เป็น",
-                "context": "ผู้เรียนพอมีพื้นฐาน Excel มาบ้าง"
-            })
-            st.toast("โหลดข้อมูลแล้ว!", icon="📊")
-            st.rerun()
+                "problem": "ใช้เวลานานในการสรุปข้อมูลการผลิตรายวันเพื่อนำเสนอผู้บริหาร",
+                "context": "ผู้เรียนมีพื้นฐาน Excel ต้องการต่อยอดใช้ Power BI เบื้องต้น"
+            }
+        # (เพิ่มใหม่อีก 2 ปุ่ม)
+        if st.button("📱 การตลาดออนไลน์สำหรับ SMEs (6 ชม.)"):
+             return {
+                "job_title": "ผู้ประกอบการ SMEs / พ่อค้าแม่ค้าออนไลน์",
+                "duration": "6 ชั่วโมง (1 วัน)",
+                "problem": "ยิงแอดโฆษณาแล้วไม่ตรงกลุ่มเป้าหมาย ต้นทุนสูงแต่ยอดขายน้อย",
+                "context": "เน้นการใช้ Facebook Ads Manager และ TikTok Ads เบื้องต้น"
+            }
+        if st.button("🦺 ความปลอดภัยในการทำงาน (จป.) (6 ชม.)"):
+             return {
+                "job_title": "พนักงานทั่วไปในโรงงานอุตสาหกรรม",
+                "duration": "6 ชั่วโมง (1 วัน)",
+                "problem": "พนักงานขาดความตระหนักเรื่องความปลอดภัยในการทำงานกับเครื่องจักร",
+                "context": "หลักสูตรตามกฎหมายกำหนด เน้นกรณีศึกษาอุบัติเหตุจริง"
+            }
 
+    # --- ส่วนซ้าย: AI Chat ---
+    with col_chat:
+        st.subheader("🤖 AI Consultant")
+        if "chat_history" not in st.session_state:
+            st.session_state["chat_history"] = [AIMessage(content="สวัสดีครับ! ต้องการจัดอบรมเรื่องอะไร บอกผมได้เลยครับ")]
+
+        # เพิ่มความสูง Chat box อีกนิดเพื่อให้สมดุลกับฝั่งขวา
+        chat_box = st.container(height=550) 
+        with chat_box:
+            for msg in st.session_state["chat_history"]:
+                if isinstance(msg, HumanMessage): st.chat_message("user", avatar="👤").write(msg.content)
+                elif isinstance(msg, AIMessage): st.chat_message("assistant", avatar="🤖").write(msg.content)
+
+        user_input = st.chat_input("พิมพ์โจทย์ที่ต้องการ...")
+        if user_input:
+            st.session_state["chat_history"].append(HumanMessage(content=user_input))
+            with chat_box:
+                st.chat_message("user", avatar="👤").write(user_input)
+                with st.chat_message("assistant", avatar="🤖"):
+                    with st.spinner("Thinking..."):
+                        response, data = consult_and_fill(st.session_state["chat_history"], user_input)
+                        st.write(response)
+            st.session_state["chat_history"].append(AIMessage(content=response))
+            if data: return data 
+
+    return None
+
+# ==========================================
+# 🧩 PART 3: FORM
+# ==========================================
+def render_form(prefill_data):
     st.markdown("---")
-
-    # ==========================================
-    # 📝 FORM SECTION
-    # ==========================================
     st.subheader("📝 ตรวจสอบและสร้างหลักสูตร")
-    
-    with st.container(border=True): # Card สีขาว
-        col1, col2 = st.columns(2)
-        with col1:
-            job_title = st.text_input("1. กลุ่มเป้าหมาย", key="job_title", placeholder="เช่น ช่างไฟฟ้า, พนักงานบัญชี")
-            problem = st.text_area("3. ปัญหา/สิ่งที่ต้องการพัฒนา", height=120, key="objectives")
-        with col2:
-            duration = st.text_input("2. ระยะเวลา", key="duration", placeholder="เช่น 6 ชั่วโมง, 2 วัน")
-            context = st.text_area("4. บริบทเพิ่มเติม", height=120, key="context")
+    if prefill_data:
+        st.session_state.update(prefill_data)
+        st.toast("✅ โหลดข้อมูลเรียบร้อย!", icon="magic")
 
-        st.markdown("###") 
-        # ใช้ type="primary" เพื่อให้ CSS จับ button[kind="primary"] ได้
-        generate_btn = st.button("✨ สร้างหลักสูตร (Generate Course)", type="primary", use_container_width=True)
+    with st.form("course_gen_form"):
+        c1, c2 = st.columns(2, gap="medium")
+        # ✅ แก้ไข: เพิ่ม placeholder (guideline) ในทุกช่อง
+        with c1:
+            st.text_input("1. กลุ่มเป้าหมาย", key="job_title", 
+                          placeholder="เช่น หัวหน้างาน ฝ่ายผลิต, วิศวกรจบใหม่, ช่างซ่อมบำรุง")
+            st.text_area("3. ปัญหา/สิ่งที่ต้องการพัฒนา", key="problem", height=120,
+                         placeholder="เช่น ทำงานล่าช้า, ขาดทักษะการใช้เครื่องมือพิเศษ, เกิดของเสียในกระบวนการผลิตบ่อยครั้ง")
+        with c2:
+            st.text_input("2. ระยะเวลา", key="duration",
+                          placeholder="เช่น 6 ชั่วโมง (1 วัน), 30 ชั่วโมง (5 วัน)")
+            st.text_area("4. บริบทเพิ่มเติม", key="context", height=120,
+                         placeholder="เช่น เน้นปฏิบัติ 80%, ต้องเตรียมเครื่องจักรเฉพาะ, ผู้เรียนไม่มีพื้นฐานมาก่อน")
 
-    # Process Logic
-    if generate_btn:
-        if not job_title or not duration:
-            st.warning("⚠️ กรุณากรอกข้อมูลให้ครบถ้วน")
-            return
+        st.markdown("###")
+        submitted = st.form_submit_button("✨ สร้างหลักสูตร (Generate Course)", type="primary", use_container_width=True)
+        return submitted
 
-        with st.spinner("🤖 AI กำลังค้นหากฎระเบียบและออกแบบหลักสูตร..."):
-            rules = search_rules(f"{job_title} {problem}")
-            if not rules: rules = "ไม่พบกฎระเบียบที่เจาะจง"
-            
-            result = generate_course_design(job_title, duration, problem, context, rules)
-            
-            st.session_state["generated_course"] = result
-            st.session_state["course_title"] = f"หลักสูตร_{job_title}"
-
-    if "generated_course" in st.session_state:
+# ==========================================
+# 🧩 PART 4 & 5: RESULT & FOOTER
+# ==========================================
+def render_result():
+    if st.session_state.get("generated_course"):
         st.divider()
         st.subheader("✅ ผลลัพธ์การออกแบบ")
         with st.container(border=True):
             st.markdown(st.session_state["generated_course"])
+        docx = create_word_docx(st.session_state["generated_course"])
+        st.download_button("📄 ดาวน์โหลดไฟล์ Word (.docx)", docx, "Course_Design.docx", 
+                           "application/vnd.openxmlformats-officedocument.wordprocessingml.document", type="primary")
+
+def render_footer():
+    profile_path = "static/profile.jpg"
+    img_b64 = get_img_as_base64(profile_path)
+    img_tag = f'<img src="data:image/jpg;base64,{img_b64}" class="footer-profile-img">' if img_b64 else ''
+
+    st.markdown(f"""
+        <div class="footer-container">
+            {img_tag}
+            <div class="footer-text">
+                <strong>DSD Course Architect © 2026</strong><br>
+                <span style="opacity: 0.8;">พัฒนาโดย กรมพัฒนาฝีมือแรงงาน | Power by Gemini AI</span>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+
+# ==========================================
+# 🚀 MAIN FUNCTION
+# ==========================================
+def render_user_page():
+    load_custom_css()
+    render_header()
+    selected_data = render_chat_and_ideas()
+    is_submitted = render_form(selected_data)
+    
+    if is_submitted:
+        job = st.session_state.get("job_title")
+        dur = st.session_state.get("duration")
+        prob = st.session_state.get("problem")
+        ctx = st.session_state.get("context")
         
-        docx_file = create_word_docx(st.session_state["generated_course"])
-        st.download_button(
-            label="📄 ดาวน์โหลดไฟล์ Word",
-            data=docx_file,
-            file_name=f"{st.session_state.get('course_title', 'Course')}.docx",
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            type="primary"
-        )
+        if job and dur:
+            with st.spinner("🤖 AI กำลังออกแบบหลักสูตร..."):
+                rules = search_rules(f"{job} {prob}")
+                res = generate_course_design(job, dur, prob, ctx, rules)
+                st.session_state["generated_course"] = res
+                st.rerun()
+        else:
+            st.warning("กรุณากรอกข้อมูลให้ครบถ้วน")
+
+    render_result()
+    render_footer()
