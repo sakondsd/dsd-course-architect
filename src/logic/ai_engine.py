@@ -23,7 +23,7 @@ def get_llm():
     
     # ใช้ 1.5 flash เพื่อความเสถียรและโควต้าเยอะ (หรือเปลี่ยนเป็น 2.0-flash ถ้าต้องการ)
     return ChatGoogleGenerativeAI(
-        model="gemini-1.5-flash", 
+        model="gemini-2.5-flash", 
         google_api_key=api_key,
         temperature=0.3
     )
