@@ -159,10 +159,10 @@ def render_chat_and_ideas():
     return None
 
 # ==========================================
-# 🧩 PART 3: FORM (✅ เพิ่ม Auto Scroll)
+# 🧩 PART 3: FORM (แก้ไขแก้ Error ไอคอน)
 # ==========================================
 def render_form(prefill_data):
-    # ✅ 1. ฝัง Anchor ไว้ตรงนี้เพื่อให้ JS วิ่งมาหา
+    # 1. ฝัง Anchor ไว้ตรงนี้เพื่อให้ JS วิ่งมาหา
     st.markdown('<div id="form_anchor"></div>', unsafe_allow_html=True)
     
     st.markdown("---")
@@ -170,9 +170,10 @@ def render_form(prefill_data):
 
     if prefill_data:
         st.session_state.update(prefill_data)
+        # ✅ แก้ไขจุดที่ Error: เปลี่ยน icon="magic" เป็น "✨" (ต้องเป็น Emoji เท่านั้น)
         st.toast("✅ โหลดข้อมูลเรียบร้อย!", icon="✨")
         
-        # ✅ 2. ยิง JavaScript เพื่อสั่ง Scroll หน้าจอลงมาที่ #form_anchor
+        # 2. ยิง JavaScript เพื่อสั่ง Scroll หน้าจอลงมาที่ #form_anchor
         js = """
         <script>
             setTimeout(function() {
@@ -180,7 +181,7 @@ def render_form(prefill_data):
                 if (element) {
                     element.scrollIntoView({behavior: 'smooth', block: 'start'});
                 }
-            }, 500); // รอ 0.5 วินาทีให้ Element สร้างเสร็จก่อนค่อยเลื่อน
+            }, 500);
         </script>
         """
         components.html(js, height=0)
@@ -221,7 +222,7 @@ def render_footer():
             {img_tag}
             <div class="footer-text">
                 <strong>DSD Course Architect © 2026</strong><br>
-                <span style="opacity: 0.8;">พัฒนาโดย กรมพัฒนาฝีมือแรงงาน | Power by Gemini AI</span>
+                <span style="opacity: 0.8;">พัฒนาโดย สำนักงานพัฒนาฝีมือแรงงานสกลนคร | Power by artist_auto</span>
             </div>
         </div>
     """, unsafe_allow_html=True)
@@ -232,9 +233,19 @@ def render_footer():
 def render_user_page():
     load_custom_css()
 
-    # ✅ เพิ่ม Logic เช็คการแสดง Popup ครั้งแรก
+    # ---------------------------------------
+    # 1. ส่วนควบคุม Popup (Auto + Manual)
+    # ---------------------------------------
+    # ถ้ายังไม่เคยดู ให้เด้ง Auto
     if "has_seen_guide" not in st.session_state:
         show_onboarding()
+
+    # ปุ่ม Manual สำหรับกดดูซ้ำ (วางมุมขวาบนสุด)
+    col_empty, col_btn = st.columns([0.92, 0.08]) 
+    with col_btn:
+        if st.button("❓", help="แนะนำวิธีการใช้งาน"):
+            show_onboarding()
+    # ---------------------------------------
 
     render_header()
     selected_data = render_chat_and_ideas()
